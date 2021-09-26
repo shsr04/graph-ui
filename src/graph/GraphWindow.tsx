@@ -1,30 +1,36 @@
 
-import UndirectedGraph from './UndirectedGraph'
+import UndirectedGraph, { Edge, Vertex } from './UndirectedGraph'
 import * as d3 from 'd3'
+import { Graph } from '../editor/GraphMapper'
 
-interface GraphWindowProps { }
+interface GraphWindowProps {
+    graphs: Graph[]
+}
 
 const GraphWindow = (props: GraphWindowProps) => {
-    const vertices = d3.range(50).map((n) => {
-        return { id: n, radius: 10 };
-    });
+    function vertices (): Vertex[] {
+        if (props.graphs.length === 0) return []
+        return d3.map(props.graphs[0].adj.keys(), (id) => {
+            return { id, radius: 10 }
+        })
+    }
 
-    const edges = [
-        { source: 0, target: 1 },
-        { source: 10, target: 1 },
-        { source: 10, target: 11 },
-        { source: 10, target: 12 },
-        { source: 11, target: 13 },
-    ]
+    function edges (): Edge[] {
+        if (props.graphs.length === 0) return []
+        return d3.map(props.graphs[0].adj.entries(),
+            ([source, adj]) =>
+                adj.map(target => ({ source, target })))
+            .flat()
+    }
 
     return <>
         <div style={{
-            width: "90%",
-            height: "90%",
+            width: '90%',
+            height: '90%'
         }}>
-            <UndirectedGraph vertices={vertices} edges={edges} />
+            <UndirectedGraph vertices={vertices()} edges={edges()} />
         </div>
-    </>;
+    </>
 }
 
-export default GraphWindow;
+export default GraphWindow

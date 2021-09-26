@@ -1,0 +1,19 @@
+{
+    "overrides": [
+        {
+            "files": ["*.ts", "*.tsx"],
+            "extends": [
+                "react-app",
+                "eslint-config-standard-with-typescript"
+            ],
+            "parserOptions": {
+                "project": [
+                    "./tsconfig.json"
+                ]
+            },
+            "rules": {
+                "@typescript-eslint/indent": ["warn", 4]
+            }
+        }
+    ]
+}
