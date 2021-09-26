@@ -18,9 +18,12 @@ const GraphWindow = (props: GraphWindowProps) => {
     ]
 
     return <>
-        <svg width="800" height="600">
+        <div style={{
+            width: "90%",
+            height: "90%",
+        }}>
             <UndirectedGraph vertices={vertices} edges={edges} />
-        </svg>
+        </div>
     </>;
 }
 

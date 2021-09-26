@@ -1,0 +1,17 @@
+// drag and drop is incredibly buggy...
+//    useLayoutEffect(() => {
+//        d3.selectAll<SVGCircleElement,Vertex>("circle")
+//            .call(
+//                d3.drag<SVGCircleElement,Vertex>()
+//                .on("start", (event,vertex) => {
+//                    if (simulation === undefined) return
+//                    if (!event.active) simulation.alphaTarget(0.3).restart();
+//                    vertex.fx = vertex.x;
+//                    vertex.fy = vertex.y;
+//                })
+//                .on("drag", (event, vertex)=>{
+//                    vertex.fx = event.x;
+//                    vertex.fy = event.y;
+//                })
+//            )
+//    }, [simulation])
