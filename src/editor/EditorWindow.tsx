@@ -8,18 +8,18 @@ interface DotParserSyntaxError extends Error {
     location: { start: { line: number, column: number } }
 }
 
-interface EditorWindowProps {
-
+export interface EditorWindowProps {
+    onInputGraphs?: (graphs: dotparser.Graph[])=> void
 }
 
 const EditorWindow = (props: EditorWindowProps) => {
     // TODO textLines: {content: string, indentation: number, selected: bool}
-    const [text, setText] = useState("");
+    const [text, setText] = useState(localStorage.getItem("graphui.editor.codeInput") ?? "");
     const [indentation, setIndentation] = useState(0);
     const [selectedLine, setSelectedLine] = useState(1);
     const [indentSize, setIndentSize] = useState(4);
-    let parseResult: dotparser.Graph[] = []
-    let parseError: DotParserSyntaxError | undefined = undefined
+    let parseResult: dotparser.Graph[] | null = null
+    let parseError: DotParserSyntaxError | null = null
     const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
     try {
@@ -31,7 +31,7 @@ const EditorWindow = (props: EditorWindowProps) => {
     const lineNumbers = d3.range(1, 100).map(n => <span key={n}>{n}<br /></span>)
 
     function errorText() {
-        if (parseError === undefined) return ""
+        if (parseError === null) return ""
         return `
             ${parseError.message}
             At line ${parseError.location.start.line}, column ${parseError.location.start.column}
@@ -40,29 +40,13 @@ const EditorWindow = (props: EditorWindowProps) => {
 
     function handleChangeText(event: ChangeEvent<HTMLTextAreaElement>) {
         setText(event.target.value)
+        localStorage.setItem("graphui.editor.codeInput", event.target.value)
     }
 
     function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-        console.log(event.key)
         switch (event.key) {
             case "Tab":
                 event.preventDefault()
-                if (!event.shiftKey) {
-                    console.log(selectedLine)
-                    setText(x => {
-                        console.log(`=> '${x}'`)
-                        const result = x.split(/\r?\n/).map((line, lineIndex) => lineIndex + 1 === selectedLine ? line + "    " : line).join("\n")
-                        console.log(`<= '${result}'`)
-                        return result
-                    })
-                    setIndentation(x => x + indentSize)
-                } else {
-                    setText(x => x.replace(new RegExp(`\\s{0,${indentSize}}$`), ""))
-                    setIndentation(x => x + indentSize)
-                }
-                break
-            case "Enter":
-                setText(x => x+d3.range(indentation).map(() => " ").join(""))
                 break
         }
     }
@@ -70,12 +54,6 @@ const EditorWindow = (props: EditorWindowProps) => {
     function handleSelectLine() {
         setSelectedLine(text.substr(0, textAreaRef.current?.selectionStart).split(/\r?\n/).length)
     }
-
-    // useEffect(() => {
-    //     if (text.length === 0) return
-    //     const result = parseDot(text)
-    //     console.log(result)
-    // }, [text])
 
     return (
         <>
@@ -109,7 +87,9 @@ const EditorWindow = (props: EditorWindowProps) => {
                 ></textarea>
                 <div style={{
                     gridColumn: "1 / span 2"
-                }}><pre>{errorText()}</pre></div>
+                }}><pre style={{
+                    whiteSpace: "pre-wrap"
+                }}>{parseResult !== null ? JSON.stringify(parseResult) : ""}{errorText()}</pre></div>
             </div>
         </>
     );

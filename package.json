@@ -35,6 +35,11 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/?!(d3)"
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",

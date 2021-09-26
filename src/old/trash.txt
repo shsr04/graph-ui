@@ -15,3 +15,19 @@
 //                })
 //            )
 //    }, [simulation])
+
+
+// Tab indentation is more complicated than this...
+// if (!event.shiftKey) {
+//     console.log(selectedLine)
+//     setText(x => {
+//         console.log(`=> '${x}'`)
+//         const result = x.split(/\r?\n/).map((line, lineIndex) => lineIndex + 1 === selectedLine ? line + "    " : line).join("\n")
+//         console.log(`<= '${result}'`)
+//         return result
+//     })
+//     setIndentation(x => x + indentSize)
+// } else {
+//     setText(x => x.replace(new RegExp(`\\s{0,${indentSize}}$`), ""))
+//     setIndentation(x => x + indentSize)
+// }
