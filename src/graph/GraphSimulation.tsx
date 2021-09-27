@@ -30,11 +30,6 @@ const GraphSimulation = (props: GraphSimulationProps) => {
     useEffect(() => {
         if (svgRef.current === null || props.graphs.length === 0) return
 
-        const center = {
-            x: svgRef.current.getBoundingClientRect().width / 2,
-            y: svgRef.current.getBoundingClientRect().height / 2
-        }
-
         const simulations = props.graphs.map((graph, i) => {
             const vertices = [...graph.vertices]
             const edges = [...graph.edges]
@@ -42,7 +37,7 @@ const GraphSimulation = (props: GraphSimulationProps) => {
                 i,
                 graph,
                 simulation: d3.forceSimulation<D3Vertex, D3Edge>(vertices)
-                    .force('center', d3.forceCenter(center.x, center.y).strength(0.1))
+                    .force('center', d3.forceCenter(0, 0).strength(0.1))
                     .force('charge', d3.forceManyBody().strength(-500))
                     .force('collision', d3.forceCollide(node => node.radius * 1.5))
                     .nodes(vertices)
@@ -69,7 +64,9 @@ const GraphSimulation = (props: GraphSimulationProps) => {
         }
     }, [props.graphs])
 
-    function drawSimulatedGraph (id: number, v: D3Vertex[], e: D3Edge[], edgeType: D3Graph['edgeType'], colorCode: string) {
+    const arrowTipSize = 6
+
+    function drawSimulatedGraph(id: number, v: D3Vertex[], e: D3Edge[], edgeType: D3Graph['edgeType'], colorCode: string) {
         if ((svgRef.current == null) === null) return
 
         const svg = d3.select(svgRef.current)
@@ -93,25 +90,47 @@ const GraphSimulation = (props: GraphSimulationProps) => {
             .attr('font-size', 'small')
             .attr('fill', 'black')
 
+        /**
+         * @param source Source vertex
+         * @param target Target vertex
+         * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
+         */
+        function intersectionWithCircle(source: D3Vertex, target: D3Vertex): { x: number, y: number } {
+            if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return { x: -99, y: -99 }
+            const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
+            const distanceBorder = distanceCenter - target.radius - arrowTipSize / 2
+            const ratio = distanceBorder / distanceCenter
+            const deltaX = (target.x - source.x) * ratio
+            const deltaY = (target.y - source.y) * ratio
+            return { x: source.x + deltaX, y: source.y + deltaY }
+        }
+
         svg.select('#links-' + id).selectAll<SVGLineElement, D3Edge>('line')
             .data(e)
             .join('line')
             .attr('x1', e => (e.source as D3Vertex).x!)
             .attr('y1', e => (e.source as D3Vertex).y!)
-            .attr('x2', e => (e.target as D3Vertex).x!)
-            .attr('y2', e => (e.target as D3Vertex).y!)
+            .attr('x2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex).x)
+            .attr('y2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex).y)
             .attr('stroke', 'black')
             .attr('strokeWidth', 2)
-            .attr('marker-end', () => edgeType == 'arrow' ? 'url(#arrow)' : '')
+            .attr('marker-end', () => edgeType === 'arrow' ? 'url(#arrowTip)' : '')
     }
 
+    const svgBoundingRect = svgRef.current !== null ? {
+        w: svgRef.current.getBoundingClientRect().width / 2,
+        h: svgRef.current.getBoundingClientRect().height / 2
+    } : { w: 0, h: 0 }
+
     return (
-        <svg width="100%" height="100%" ref={svgRef}>
-            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
-                markerWidth="6" markerHeight="6"
-                orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
+        <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w} -${svgBoundingRect.h} ${svgBoundingRect.w * 2} ${svgBoundingRect.h * 2}`}>
+            <defs>
+                <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
+                    markerWidth={arrowTipSize} markerHeight={arrowTipSize}
+                    orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+            </defs>
 
             {
                 props.graphs.map((_, i) => (
