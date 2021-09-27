@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
-import { Simulation } from 'd3'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 export interface D3Graph {
     name: string
@@ -37,16 +36,16 @@ const GraphSimulation = (props: GraphSimulationProps) => {
         }
 
         const simulations = props.graphs.map((graph, i) => {
-            const vertices = graph.vertices
-            const edges = graph.edges
+            const vertices = [...graph.vertices]
+            const edges = [...graph.edges]
             return {
                 i,
                 graph,
                 simulation: d3.forceSimulation<D3Vertex, D3Edge>(vertices)
                     .force('center', d3.forceCenter(center.x, center.y).strength(0.1))
-                    .force('charge', d3.forceManyBody().strength(-100))
+                    .force('charge', d3.forceManyBody().strength(-500))
                     .force('collision', d3.forceCollide(node => node.radius * 1.5))
-                    .nodes([...vertices])
+                    .nodes(vertices)
                     .force('links', d3.forceLink<D3Vertex, D3Edge>(edges).id(vertex => vertex.id).links(edges))
             }
         })
@@ -75,7 +74,7 @@ const GraphSimulation = (props: GraphSimulationProps) => {
 
         const svg = d3.select(svgRef.current)
 
-        svg.select('#nodes-' + id).selectAll<SVGCircleElement, D3Vertex>('circle')
+        svg.select(`#nodes-${id}`).selectAll<SVGCircleElement, D3Vertex>('circle')
             .data(v)
             .join('circle')
             .attr('cx', u => u.x!)
@@ -83,6 +82,16 @@ const GraphSimulation = (props: GraphSimulationProps) => {
             .attr('r', u => u.radius)
             .attr('stroke', colorCode)
             .attr('fill', 'white')
+
+        svg.select(`#nodes-${id}`).selectAll<SVGTextElement, D3Vertex>('text')
+            .data(v)
+            .join('text')
+            .text(u => u.id)
+            // hack: center text inside circle
+            .attr('x', u => u.x! - u.radius / 2)
+            .attr('y', u => u.y! + u.radius / 2)
+            .attr('font-size', 'small')
+            .attr('fill', 'black')
 
         svg.select('#links-' + id).selectAll<SVGLineElement, D3Edge>('line')
             .data(e)
