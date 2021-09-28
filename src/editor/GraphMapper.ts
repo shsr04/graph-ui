@@ -1,28 +1,10 @@
-import { Graph as DotGraph, EdgeStmt, NodeId, NodeStmt } from 'dotparser'
 import * as d3 from 'd3'
+import { EdgeStmt, Graph as DotGraph, NodeId, NodeStmt } from 'dotparser'
 
 export interface Graph<IdType = string> {
     adj: Map<IdType, IdType[]>
     directed: boolean
     name: string
-}
-
-function * subsets<T> (array: T[], length: number, start = 0): Generator<Set<T>> {
-    if (start >= array.length || length < 1) {
-        yield new Set()
-    } else {
-        while (start <= array.length - length) {
-            const first = array[start]
-            const gen = subsets(array, length - 1, start + 1)
-            while (true) {
-                const subset = gen.next()
-                subset.value.add(first)
-                yield subset.value
-                if (subset.done === true) break
-            }
-            start++
-        }
-    }
 }
 
 export class EdgeWithInvalidVertexError extends Error {
@@ -68,10 +50,14 @@ export function mapToGraph (g: DotGraph): Graph {
         // add vertices on the fly for the edge
         if (!result.adj.has(edge[0])) result.adj.set(edge[0], [])
         if (!result.adj.has(edge[1])) result.adj.set(edge[1], [])
+        const sourceAdj = result.adj.get(edge[0]) ?? []
+        const targetAdj = result.adj.get(edge[1]) ?? []
         // self-edges are only allowed in digraphs
-        if (edge[0] !== edge[1] || g.type === 'digraph') { result.adj.get(edge[0])!.push(edge[1]) }
+        if (edge[0] !== edge[1] || g.type === 'digraph') { sourceAdj.push(edge[1]) }
         // if G is a graph, add the reverse edge
-        if (g.type === 'graph') { result.adj.get(edge[1])!.push(edge[0]) }
+        if (g.type === 'graph') { targetAdj.push(edge[0]) }
+        result.adj.set(edge[0], sourceAdj)
+        result.adj.set(edge[1], targetAdj)
     }
 
     // if G is a graph, discard duplicate edges

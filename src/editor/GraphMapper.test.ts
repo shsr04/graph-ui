@@ -10,31 +10,35 @@ function makeEdge (targets: Array<string | number>): EdgeStmt {
 }
 
 describe('GraphMapper', () => {
-    it('should map DOT to graph', () => {
-        const g: DotGraph = {
-            type: 'graph',
-            children: [
-                makeNode(0), makeNode(1), makeNode(2), makeNode(3), makeNode(4), makeNode(5), makeNode(6), makeNode(7), makeNode(8),
-                makeEdge([0, 1, 2]),
-                makeEdge([4, 5, 1]),
-                makeEdge([7, 8]),
-                makeEdge([7, 4, 7])
-            ]
-        }
+    describe('DOT syntax', () => {
+        it('should map graphs', () => {
+            const g: DotGraph = {
+                type: 'graph',
+                children: [
+                    makeNode(0), makeNode(1), makeNode(2), makeNode(3), makeNode(4), makeNode(5), makeNode(6), makeNode(7), makeNode(8),
+                    makeEdge([0, 1, 2]),
+                    makeEdge([4, 5, 1]),
+                    makeEdge([7, 8]),
+                    makeEdge([7, 4, 7])
+                ]
+            }
 
-        const expected: Graph = {
-            adj: new Map([
-                ['0', ['1']],
-                ['1', ['0', '2', '5']],
-                ['2', ['1']],
-                ['3', []],
-                ['4', ['5', '7']],
-                ['5', ['4', '1']],
-                ['6', []],
-                ['7', ['8', '4']],
-                ['8', ['7']]
-            ])
-        }
-        expect(mapToGraph(g)).toEqual(expected)
+            const expected: Graph = {
+                name: '',
+                directed: false,
+                adj: new Map([
+                    ['0', ['1']],
+                    ['1', ['0', '2', '5']],
+                    ['2', ['1']],
+                    ['3', []],
+                    ['4', ['5', '7']],
+                    ['5', ['4', '1']],
+                    ['6', []],
+                    ['7', ['8', '4']],
+                    ['8', ['7']]
+                ])
+            }
+            expect(mapToGraph(g)).toEqual(expected)
+        })
     })
 })

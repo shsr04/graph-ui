@@ -7,9 +7,9 @@ interface GraphWindowProps {
     graphs: Graph[]
 }
 
-const GraphWindow = (props: GraphWindowProps) => {
+const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     function getD3Vertices (graph: Graph): D3Vertex[] {
-        return d3.map(graph.adj.keys(), id => ({ id, radius: 10 }))
+        return d3.map(graph.adj.keys(), id => ({ id, radius: 20 }))
     }
 
     function getD3Edges (graph: Graph): D3Edge[] {

@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
-import logo from './logo.svg'
+import { useState } from 'react'
 import './App.css'
-import GraphWindow from './graph/GraphWindow'
 import EditorWindow from './editor/EditorWindow'
 import { Graph } from './editor/GraphMapper'
+import GraphWindow from './graph/GraphWindow'
 
-function App () {
+function App (): JSX.Element {
     const [graphs, setGraphs] = useState<Graph[]>([])
 
     return (
