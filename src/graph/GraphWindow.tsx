@@ -1,21 +1,21 @@
 
 import GraphSimulation, { D3Edge, D3Graph, D3Vertex } from './GraphSimulation'
 import * as d3 from 'd3'
-import { GraphProps } from '../editor/GraphMapper'
+import { Graph } from '../editor/GraphMapper'
 
 interface GraphWindowProps {
-    graphs: GraphProps[]
+    graphs: Graph[]
 }
 
 const GraphWindow = (props: GraphWindowProps): JSX.Element => {
-    function getD3Vertices (graph: GraphProps): D3Vertex[] {
-        return d3.map(graph.adj.keys(), id => ({ id, radius: 20 }))
+    function getD3Vertices (graph: Graph): D3Vertex[] {
+        return d3.map(graph.internalAdjMap.keys(), id => ({ id, radius: 20 }))
     }
 
-    function getD3Edges (graph: GraphProps): D3Edge[] {
+    function getD3Edges (graph: Graph): D3Edge[] {
         return d3
             .map(
-                graph.adj.entries(),
+                graph.internalAdjMap.entries(),
                 ([source, adj]) => adj.map(target => ({ source, target }))
             )
             .flat()

@@ -1,5 +1,5 @@
 import { EdgeStmt, Graph as DotGraph, NodeStmt } from 'dotparser'
-import { GraphProps, mapToGraph } from './GraphMapper'
+import { Graph, mapToGraph } from './GraphMapper'
 
 function makeNode (id: string | number): NodeStmt {
     return { type: 'node_stmt', node_id: { type: 'node_id', id: id }, attr_list: [] }
@@ -23,22 +23,19 @@ describe('GraphMapper', () => {
                 ]
             }
 
-            const expected: GraphProps = {
-                index: 0,
-                name: '',
-                directed: false,
-                adj: new Map([
-                    ['0', ['1']],
-                    ['1', ['0', '2', '5']],
-                    ['2', ['1']],
-                    ['3', []],
-                    ['4', ['5', '7']],
-                    ['5', ['4', '1']],
-                    ['6', []],
-                    ['7', ['8', '4']],
-                    ['8', ['7']]
-                ])
-            }
+            const expectedAdj = new Map([
+                ['0', ['1']],
+                ['1', ['0', '2', '5']],
+                ['2', ['1']],
+                ['3', []],
+                ['4', ['5', '7']],
+                ['5', ['4', '1']],
+                ['6', []],
+                ['7', ['8', '4']],
+                ['8', ['7']]
+            ])
+            const expected = new Graph(0, '', false, expectedAdj)
+
             expect(mapToGraph(g, 0)).toEqual(expected)
         })
     })

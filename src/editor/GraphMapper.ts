@@ -1,33 +1,48 @@
 import * as d3 from 'd3'
 import { EdgeStmt, Graph as DotGraph, NodeId, NodeStmt } from 'dotparser'
 
-export interface GraphProps<IdType = string> {
-    /**
+/**
+ * A graph is a pair (V,E) such that E = {(u,v) : u,v in V}.
+ * This graph representation uses an adjacency map to store the vertices and edges.
+ * The graph is either directed or undirected.
+ */
+export class Graph<IdType = string> {
+    constructor (
+        /**
      * Index of the graph over all stored graphs.
      */
-    index: number
-    /**
-     * Display name.
-     */
-    name: string
-    /**
-     * True if the graph is directed (= digraph), false if the graph is undirected.
-     */
-    directed: boolean
-    /**
-     * Adjacency map.
-     * For each vertex in the graph, stores the list of adjacent vertices.
-     */
-    adj: Map<IdType, IdType[]>
-}
+        public readonly index: number,
+        /**
+         * Display name.
+         */
+        public readonly name: string,
+        /**
+         * True if the graph is directed (= digraph), false if the graph is undirected.
+         */
+        public readonly directed: boolean,
+        /**
+         * Adjacency map.
+         * For each vertex in the graph, stores the list of adjacent vertices.
+         */
+        public readonly internalAdjMap: Map<IdType, IdType[]>
+    ) {
+        this.index = index
+        this.name = name
+        this.directed = directed
+        this.internalAdjMap = internalAdjMap
+    }
 
-export class Graph<IdType = string> {
-    constructor(
-        public props: GraphProps<IdType>,
-    ) {}
+    public deg (u: IdType): number {
+        const adj = this.internalAdjMap.get(u)
+        if (adj === undefined) throw Error(`Vertex ${u} is not in graph ${this.name}.`)
+        return this.internalAdjMap.get(u)?.length ?? -1
+    }
 
-    public deg() {
-        // TODO
+    public adj (u: IdType, k: number): IdType {
+        const adj = this.internalAdjMap.get(u)
+        if (adj === undefined) throw Error(`Vertex ${u} is not in graph ${this.name}.`)
+        if (k >= adj.length) throw Error(`Vertex ${u} has degree ${adj.length}: therefore, cannot access neighbour #${k}.`)
+        return adj[k]
     }
 }
 
@@ -41,7 +56,7 @@ export class EdgeWithInvalidVertexError extends Error {
     }
 }
 
-export function mapToGraph (g: DotGraph, i: number): GraphProps {
+export function mapToGraph (g: DotGraph, i: number): Graph {
     const vertices = g.children
         .filter(child => child.type === 'node_stmt')
         .map(u => (u as NodeStmt).node_id.id.toString())
@@ -58,37 +73,32 @@ export function mapToGraph (g: DotGraph, i: number): GraphProps {
         // map edge lists to pairs
         .flatMap(e => d3.pairs(e))
 
-    const result: GraphProps = {
-        index: i,
-        name: g.id?.toString() ?? '',
-        directed: g.type === 'digraph',
-        adj: new Map()
-    }
+    let adj = new Map()
 
     // add predefined vertices
     for (const vertex of vertices) {
-        result.adj.set(vertex, [])
+        adj.set(vertex, [])
     }
 
     // add edges between vertices
     for (const edge of edges) {
         // if vertex is not yet defined, add it on the fly
-        const sourceAdj = result.adj.get(edge[0]) ?? []
-        const targetAdj = result.adj.get(edge[1]) ?? []
+        const sourceAdj = adj.get(edge[0]) ?? []
+        const targetAdj = adj.get(edge[1]) ?? []
 
         // self-edges are only allowed in digraphs
         if (edge[0] !== edge[1] || g.type === 'digraph') { sourceAdj.push(edge[1]) }
         // if G is a graph, add the reverse edge
         if (g.type === 'graph') { targetAdj.push(edge[0]) }
 
-        result.adj.set(edge[0], sourceAdj)
-        result.adj.set(edge[1], targetAdj)
+        adj.set(edge[0], sourceAdj)
+        adj.set(edge[1], targetAdj)
     }
 
     // if G is a graph, discard duplicate edges
     if (g.type === 'graph') {
-        result.adj = new Map(d3.map(result.adj.entries(), ([vertex, adjList]) => ([vertex, Array.from(new Set(adjList))])))
+        adj = new Map(d3.map(adj.entries(), ([vertex, adjList]) => ([vertex, Array.from(new Set(adjList))])))
     }
 
-    return result
+    return new Graph(i, g.id?.toString() ?? '', g.type === 'digraph', adj)
 }

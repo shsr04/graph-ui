@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import './App.css'
 import EditorWindow from './editor/EditorWindow'
-import { GraphProps } from './editor/GraphMapper'
+import { Graph } from './editor/GraphMapper'
 import GraphWindow from './graph/GraphWindow'
 
 function App (): JSX.Element {
-    const [graphs, setGraphs] = useState<GraphProps[]>([])
+    const [graphs, setGraphs] = useState<Graph[]>([])
 
     return (
         <div className="App">
