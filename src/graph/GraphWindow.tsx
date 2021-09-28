@@ -1,7 +1,7 @@
 
 import GraphSimulation, { D3Edge, D3Graph, D3Vertex } from './GraphSimulation'
 import * as d3 from 'd3'
-import { Graph } from '../editor/GraphMapper'
+import { Graph } from '../algorithms/Graph'
 
 interface GraphWindowProps {
     graphs: Graph[]
@@ -21,12 +21,20 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
             .flat()
     }
 
+    function getTooltip (graph: Graph): string {
+        return `
+        name = '${graph.name}'
+        connected = ${graph.properties.isConnected}
+        `
+    }
+
     const graphs = props.graphs.map<D3Graph>(graph => ({
         index: graph.index,
         name: graph.name,
         edgeType: graph.directed ? 'arrow' : 'line',
         vertices: getD3Vertices(graph),
-        edges: getD3Edges(graph)
+        edges: getD3Edges(graph),
+        tooltip: getTooltip(graph)
     }))
 
     return <>

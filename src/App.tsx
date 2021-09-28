@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import EditorWindow from './editor/EditorWindow'
-import { Graph } from './editor/GraphMapper'
+import { Graph } from './algorithms/Graph'
 import GraphWindow from './graph/GraphWindow'
 
 function App (): JSX.Element {

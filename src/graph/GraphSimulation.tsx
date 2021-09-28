@@ -7,6 +7,7 @@ export interface D3Graph {
     vertices: D3Vertex[]
     edges: D3Edge[]
     edgeType: 'line' | 'arrow'
+    tooltip: string
 }
 
 export interface D3Vertex extends d3.SimulationNodeDatum {
@@ -122,6 +123,20 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('stroke', 'transparent')
             .attr('fill', 'transparent')
             .call(options?.dragHandler ?? (() => { }))
+            .on('mousemove', function (event, d) {
+                const [x, y] = d3.pointer(event, this)
+                d3.select('#tooltip')
+                    .selectAll('text')
+                    .data([null])
+                    .join('text')
+                    .text(graph.tooltip)
+                    .style('font-family', 'monospace')
+                    .style('white-space', 'pre-wrap')
+                    .attr('transform', `translate(${x + 30},${y})`)
+            })
+            .on('mouseleave', () => {
+                d3.select('#tooltip text').remove()
+            })
 
         svg.select(`#links-${id}`).selectAll<SVGLineElement, D3Edge>('line')
             .data(e)
@@ -162,25 +177,28 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
     // TODO tooltips with graph properties
 
     return (
-        <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w} -${svgBoundingRect.h} ${svgBoundingRect.w * 2} ${svgBoundingRect.h * 2}`}>
-            <defs>
-                <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
-                    markerWidth={arrowTipSize} markerHeight={arrowTipSize}
-                    orient="auto-start-reverse">
-                    <path d="M 0 0 L 10 5 L 0 10 z" />
-                </marker>
-            </defs>
+        <>
+            <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w} -${svgBoundingRect.h} ${svgBoundingRect.w * 2} ${svgBoundingRect.h * 2}`}>
+                <defs>
+                    <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
+                        markerWidth={arrowTipSize} markerHeight={arrowTipSize}
+                        orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" />
+                    </marker>
+                </defs>
 
-            {
-                props.graphs.map((_, i) => (
-                    <>
-                        <g id={`links-${i}`}></g>
-                        <g id={`nodes-${i}`}></g>
-                    </>
-                ))
-            }
+                {
+                    props.graphs.map((_, i) => (
+                        <>
+                            <g id={`links-${i}`}></g>
+                            <g id={`nodes-${i}`}></g>
+                        </>
+                    ))
+                }
 
-        </svg>
+                <g id="tooltip"></g>
+            </svg>
+        </>
     )
 }
 

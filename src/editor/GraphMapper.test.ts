@@ -1,5 +1,6 @@
 import { EdgeStmt, Graph as DotGraph, NodeStmt } from 'dotparser'
-import { Graph, mapToGraph } from './GraphMapper'
+import { mapToGraph } from './GraphMapper'
+import { Graph } from '../algorithms/Graph'
 
 function makeNode (id: string | number): NodeStmt {
     return { type: 'node_stmt', node_id: { type: 'node_id', id: id }, attr_list: [] }
