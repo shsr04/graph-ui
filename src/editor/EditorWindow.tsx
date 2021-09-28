@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { Graph, mapToGraph } from './GraphMapper'
+import { GraphProps, mapToGraph } from './GraphMapper'
 
 interface DotParserSyntaxError extends Error {
     message: string
@@ -10,7 +10,7 @@ interface DotParserSyntaxError extends Error {
 }
 
 export interface EditorWindowProps {
-    onInputGraphs: (graphs: Graph[]) => void
+    onInputGraphs: (graphs: GraphProps[]) => void
 }
 
 const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Element => {

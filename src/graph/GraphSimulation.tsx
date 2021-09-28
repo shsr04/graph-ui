@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import { useEffect, useRef } from 'react'
 
 export interface D3Graph {
+    index: number
     name: string
     vertices: D3Vertex[]
     edges: D3Edge[]
@@ -30,11 +31,10 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
     useEffect(() => {
         if (svgRef.current === null || props.graphs.length === 0) return
 
-        const simulations = props.graphs.map((graph, i) => {
+        const simulations = props.graphs.map(graph => {
             const vertices = [...graph.vertices]
             const edges = [...graph.edges]
             return {
-                i,
                 graph,
                 simulation: d3.forceSimulation<D3Vertex, D3Edge>(vertices)
                     .force('center', d3.forceCenter(0, 0).strength(0.1))
@@ -45,16 +45,32 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             }
         })
 
-        const colorScale = d3.scaleOrdinal(simulations.map(({ i }) => i), d3.schemeCategory10)
+        const colorScale = d3.scaleOrdinal(simulations.map(({ graph }) => graph.index), d3.schemeCategory10)
 
-        for (const { i, graph, simulation } of simulations) {
+        for (const { graph, simulation } of simulations) {
             simulation.alpha(0.1).restart()
 
             simulation.on('tick', () => {
-                const nodes = simulation.nodes()
-                const links = simulation.force<d3.ForceLink<D3Vertex, D3Edge>>('links')?.links()
-                drawSimulatedGraph(i, [...nodes], links === undefined ? [] : [...links], graph.edgeType, colorScale(i), simulation)
+                drawSimulatedGraph(graph, { colorCode: colorScale(graph.index), dragHandler: handleDrag(simulation) })
             })
+        }
+
+        function handleDrag (simulation: d3.Simulation<D3Vertex, D3Edge>): d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition> {
+            return d3.drag<SVGCircleElement, D3Vertex>()
+                .on('start', (event) => {
+                    if (event.active > 0) return
+                    simulation.alphaTarget(0.2).restart()
+                })
+                .on('drag', (event, vertex) => {
+                    vertex.fx = event.x
+                    vertex.fy = event.y
+                })
+                .on('end', (event, vertex) => {
+                    if (event.active > 0) return
+                    simulation.alphaTarget(0)
+                    vertex.fx = null
+                    vertex.fy = null
+                })
         }
 
         return () => {
@@ -64,10 +80,16 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
         }
     }, [props.graphs])
 
-    function drawSimulatedGraph (id: number, v: D3Vertex[], e: D3Edge[], edgeType: D3Graph['edgeType'], colorCode: string, simulation: d3.Simulation<D3Vertex, D3Edge>): void {
+    function drawSimulatedGraph (graph: D3Graph, options?: {
+        colorCode?: string
+        dragHandler?: d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition>
+    }): void {
         if ((svgRef.current == null) === null) return
 
         const svg = d3.select(svgRef.current)
+        const id = graph.index
+        const v = graph.vertices
+        const e = graph.edges
 
         svg.select(`#nodes-${id}`).selectAll<SVGCircleElement, D3Vertex>('circle.vertex')
             .data(v)
@@ -76,7 +98,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('cx', u => u.x ?? null)
             .attr('cy', u => u.y ?? null)
             .attr('r', u => u.radius)
-            .attr('stroke', colorCode)
+            .attr('stroke', options?.colorCode ?? 'black')
             .attr('fill', 'white')
 
         svg.select(`#nodes-${id}`).selectAll<SVGTextElement, D3Vertex>('text.label')
@@ -99,7 +121,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('r', u => u.radius)
             .attr('stroke', 'transparent')
             .attr('fill', 'transparent')
-            .call(handleDrag(simulation))
+            .call(options?.dragHandler ?? (() => { }))
 
         svg.select(`#links-${id}`).selectAll<SVGLineElement, D3Edge>('line')
             .data(e)
@@ -110,25 +132,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('y2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex).y)
             .attr('stroke', 'black')
             .attr('strokeWidth', 2)
-            .attr('marker-end', () => edgeType === 'arrow' ? 'url(#arrowTip)' : '')
-
-        function handleDrag (simulation: d3.Simulation<D3Vertex, D3Edge>): d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition> {
-            return d3.drag<SVGCircleElement, D3Vertex>()
-                .on('start', (event) => {
-                    if (event.active > 0) return
-                    simulation.alphaTarget(0.2).restart()
-                })
-                .on('drag', (event, vertex) => {
-                    vertex.fx = event.x
-                    vertex.fy = event.y
-                })
-                .on('end', (event, vertex) => {
-                    if (event.active > 0) return
-                    simulation.alphaTarget(0)
-                    vertex.fx = null
-                    vertex.fy = null
-                })
-        }
+            .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
 
         /**
          * @param source Source vertex
