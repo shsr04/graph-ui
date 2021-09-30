@@ -26,35 +26,39 @@ export class Graph<IdType = string> {
          * Adjacency map.
          * For each vertex in the graph, stores the list of adjacent vertices.
          */
-        public readonly internalAdjMap: Map<IdType, IdType[]>
+        private readonly adjMap: Map<IdType, IdType[]>
     ) {
         this.index = index
         this.name = name
         this.directed = directed
-        this.internalAdjMap = internalAdjMap
+        this.adjMap = adjMap
         this.properties = getProperties(this)
     }
 
     public deg (u: IdType): number {
-        const adj = this.internalAdjMap.get(u)
+        const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
-        return this.internalAdjMap.get(u)?.length ?? -1
+        return this.adjMap.get(u)?.length ?? -1
     }
 
     public adj (u: IdType, k: number): IdType {
-        const adj = this.internalAdjMap.get(u)
+        const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
         if (k >= adj.length) { throw Error(`Vertex ${u} has degree ${adj.length}: therefore, cannot access neighbour #${k}.`) }
         return adj[k]
     }
 
     public vertices (): IdType[] {
-        return d3.map(this.internalAdjMap.keys(), x => x)
+        return d3.map(this.adjMap.keys(), x => x)
     }
 
     public neighbours (u: IdType): IdType[] {
-        const adj = this.internalAdjMap.get(u)
+        const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
         return adj
+    }
+
+    public edges (): Array<[IdType, IdType]> {
+        return Array.from(this.adjMap.entries()).flatMap(([u, adjList]) => adjList.map<[IdType, IdType]>(v => ([u, v])))
     }
 }

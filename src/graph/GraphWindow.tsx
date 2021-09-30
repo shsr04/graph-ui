@@ -1,39 +1,31 @@
 
-import GraphSimulation, { D3Edge, D3Graph, D3Vertex } from './GraphSimulation'
-import * as d3 from 'd3'
 import { Graph } from '../algorithms/Graph'
+import GraphSimulation, { SimEdge, SimGraph, SimVertex } from './GraphSimulation'
 
 interface GraphWindowProps {
     graphs: Graph[]
 }
 
 const GraphWindow = (props: GraphWindowProps): JSX.Element => {
-    function getD3Vertices (graph: Graph): D3Vertex[] {
-        return d3.map(graph.internalAdjMap.keys(), id => ({ id, radius: 20 }))
+    function getSimVertices (graph: Graph): SimVertex[] {
+        return graph.vertices().map(id => ({ id, radius: 20 }))
     }
 
-    function getD3Edges (graph: Graph): D3Edge[] {
-        return d3
-            .map(
-                graph.internalAdjMap.entries(),
-                ([source, adj]) => adj.map(target => ({ source, target }))
-            )
-            .flat()
+    function getSimEdges (graph: Graph): SimEdge[] {
+        return graph.vertices().flatMap(source => graph.neighbours(source).map(target => ({ source, target })))
     }
 
     function getTooltip (graph: Graph): string {
-        return `
-        name = '${graph.name}'
-        connected = ${graph.properties.isConnected}
-        `
+        const treeString = graph.properties.isTree ? `tree = ${graph.properties.isTree}` : `connected = ${graph.properties.isConnected}\nacyclic = ${graph.properties.isAcyclic}`
+        return `name = '${graph.name}'\n${treeString}`
     }
 
-    const graphs = props.graphs.map<D3Graph>(graph => ({
+    const graphs = props.graphs.map<SimGraph>(graph => ({
         index: graph.index,
         name: graph.name,
         edgeType: graph.directed ? 'arrow' : 'line',
-        vertices: getD3Vertices(graph),
-        edges: getD3Edges(graph),
+        vertices: getSimVertices(graph),
+        edges: getSimEdges(graph),
         tooltip: getTooltip(graph)
     }))
 

@@ -1,24 +1,47 @@
 import { Graph } from './Graph'
-import * as d3 from 'd3'
 
-type Colour = 'white' | 'grey' | 'black'
+export type Colour = 'white' | 'grey' | 'black'
 
-export function dfs<T> (g: Graph<T>): Map<T, T | null> {
-    const colour: Map<T, Colour> = new Map(d3.map(g.internalAdjMap.keys(), u => ([u, 'white'])))
-    const predecessor: Map<T, T | null> = new Map(d3.map(g.internalAdjMap.keys(), u => ([u, null])))
+type VertexFunction<T> = (u: T) => void
+type EdgeFunction<T> = (u: T, k: number, colour: Colour) => void
+
+export interface DfsFunctions<T> {
+    preprocess?: VertexFunction<T>
+    postprocess?: VertexFunction<T>
+    preexplore?: EdgeFunction<T>
+    postexplore?: EdgeFunction<T>
+}
+
+/**
+ * Runs a depth-first search on the given graph. (Hopcroft, Tarjan)
+ * @param g Input graph
+ * @returns The predecessor map of the graph. For any vertex u, the predecessor map contains u's predecessor in the graph.
+ * If u is the root vertex of a spanning tree, its predecessor entry is null.
+ */
+export function dfs<T> (g: Graph<T>, f?: DfsFunctions<T>): Map<T, T | null> {
+    const colour: Map<T, Colour> = new Map(g.vertices().map(u => ([u, 'white'])))
+    const predecessor: Map<T, T | null> = new Map(g.vertices().map(u => ([u, null])))
     for (const u of g.vertices()) {
         if (colour.get(u) !== 'white') continue
-        visit(g, u, colour, predecessor)
+        visit(g, u, colour, predecessor, f)
     }
     return predecessor
 }
 
-function visit<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predecessor: Map<T, T | null>, preprocess?: (u: T) => void, postprocess?: (u: T) => void): void {
+function visit<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predecessor: Map<T, T | null>, f?: DfsFunctions<T>): void {
+    f?.preprocess?.(u)
     colour.set(u, 'grey')
-    for (const v of g.neighbours(u)) {
-        if (colour.get(v) !== 'white') continue
-        predecessor.set(v, u)
-        visit(g, v, colour, predecessor)
+    for (let k = 0; k < g.neighbours(u).length; k++) {
+        const v = g.adj(u, k)
+        const c = colour.get(v)
+        if (c === undefined) throw Error(`INTERNAL ERROR: vertex ${v} has no colour`)
+        f?.preexplore?.(u, k, c)
+        if (colour.get(v) === 'white') {
+            predecessor.set(v, u)
+            visit(g, v, colour, predecessor, f)
+        }
+        f?.postexplore?.(u, k, c)
     }
     colour.set(u, 'black')
+    f?.postprocess?.(u)
 }

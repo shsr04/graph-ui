@@ -1,24 +1,24 @@
 import * as d3 from 'd3'
 import { useEffect, useRef } from 'react'
 
-export interface D3Graph {
+export interface SimGraph {
     index: number
     name: string
-    vertices: D3Vertex[]
-    edges: D3Edge[]
+    vertices: SimVertex[]
+    edges: SimEdge[]
     edgeType: 'line' | 'arrow'
     tooltip: string
 }
 
-export interface D3Vertex extends d3.SimulationNodeDatum {
+export interface SimVertex extends d3.SimulationNodeDatum {
     id: number | string
     radius: number
 }
 
-export interface D3Edge extends d3.SimulationLinkDatum<D3Vertex> { }
+export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 
 interface GraphSimulationProps {
-    graphs: D3Graph[]
+    graphs: SimGraph[]
 }
 
 /**
@@ -37,12 +37,12 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             const edges = [...graph.edges]
             return {
                 graph,
-                simulation: d3.forceSimulation<D3Vertex, D3Edge>(vertices)
+                simulation: d3.forceSimulation<SimVertex, SimEdge>(vertices)
+                    .nodes(vertices)
                     .force('center', d3.forceCenter(0, 0).strength(0.1))
                     .force('charge', d3.forceManyBody().strength(-500))
                     .force('collision', d3.forceCollide(node => node.radius * 1.5))
-                    .nodes(vertices)
-                    .force('links', d3.forceLink<D3Vertex, D3Edge>(edges).id(vertex => vertex.id).links(edges))
+                    .force('links', d3.forceLink<SimVertex, SimEdge>(edges).id(vertex => vertex.id).links(edges))
             }
         })
 
@@ -56,8 +56,8 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             })
         }
 
-        function handleDrag (simulation: d3.Simulation<D3Vertex, D3Edge>): d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition> {
-            return d3.drag<SVGCircleElement, D3Vertex>()
+        function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
+            return d3.drag<SVGCircleElement, SimVertex>()
                 .on('start', (event) => {
                     if (event.active > 0) return
                     simulation.alphaTarget(0.2).restart()
@@ -81,18 +81,23 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
         }
     }, [props.graphs])
 
-    function drawSimulatedGraph (graph: D3Graph, options?: {
+    function drawSimulatedGraph (graph: SimGraph, options?: {
         colorCode?: string
-        dragHandler?: d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition>
+        dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
     }): void {
-        if ((svgRef.current == null) === null) return
+        if (svgRef.current === null) return
 
         const svg = d3.select(svgRef.current)
         const id = graph.index
         const v = graph.vertices
         const e = graph.edges
 
-        svg.select(`#nodes-${id}`).selectAll<SVGCircleElement, D3Vertex>('circle.vertex')
+        // Undocumented (fun) fact: we must use selectAll for data-joined elements, otherwise d3 throws null pointer errors
+        // Note: The link group comes before the node group so that the links are drawn in the background
+        const linkGroup = svg.selectAll(`#links-${id}`).data([null]).join('g').attr('id', `links-${id}`)
+        const nodeGroup = svg.selectAll(`#nodes-${id}`).data([null]).join('g').attr('id', `nodes-${id}`)
+
+        nodeGroup.selectAll<SVGCircleElement, SimVertex>('circle.vertex')
             .data(v)
             .join('circle')
             .attr('class', 'vertex')
@@ -102,7 +107,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('stroke', options?.colorCode ?? 'black')
             .attr('fill', 'white')
 
-        svg.select(`#nodes-${id}`).selectAll<SVGTextElement, D3Vertex>('text.label')
+        nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
             .data(v)
             .join('text')
             .attr('class', 'label')
@@ -113,7 +118,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('font-size', u => u.radius)
             .attr('fill', 'black')
 
-        svg.select(`#nodes-${id}`).selectAll<SVGCircleElement, D3Vertex>('.drag-overlay')
+        nodeGroup.selectAll<SVGCircleElement, SimVertex>('.drag-overlay')
             .data(v)
             .join('circle')
             .attr('class', 'drag-overlay')
@@ -124,27 +129,29 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('fill', 'transparent')
             .call(options?.dragHandler ?? (() => { }))
             .on('mousemove', function (event, d) {
+                const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
                 const [x, y] = d3.pointer(event, this)
-                d3.select('#tooltip')
-                    .selectAll('text')
-                    .data([null])
-                    .join('text')
-                    .text(graph.tooltip)
+                const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
+                tooltipGroup.selectAll('rect').data([null]).join('rect')
+                // TODO rect autosize + background
+                tooltipGroup.selectAll('text').data([null]).join('text')
                     .style('font-family', 'monospace')
-                    .style('white-space', 'pre-wrap')
                     .attr('transform', `translate(${x + 30},${y})`)
+                    .selectAll('tspan').data(lines).join('tspan')
+                    .attr('x', 0).attr('dy', '1.25em')
+                    .text(line => line)
             })
             .on('mouseleave', () => {
-                d3.select('#tooltip text').remove()
+                svg.select('#tooltip').remove()
             })
 
-        svg.select(`#links-${id}`).selectAll<SVGLineElement, D3Edge>('line')
+        linkGroup.selectAll<SVGLineElement, SimEdge>('line')
             .data(e)
             .join('line')
-            .attr('x1', e => (e.source as D3Vertex).x ?? null)
-            .attr('y1', e => (e.source as D3Vertex).y ?? null)
-            .attr('x2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex).x)
-            .attr('y2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex).y)
+            .attr('x1', e => (e.source as SimVertex).x ?? null)
+            .attr('y1', e => (e.source as SimVertex).y ?? null)
+            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).x)
+            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).y)
             .attr('stroke', 'black')
             .attr('strokeWidth', 2)
             .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
@@ -154,7 +161,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
          * @param target Target vertex
          * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
          */
-        function intersectionWithCircle (source: D3Vertex, target: D3Vertex): { x: number, y: number } {
+        function intersectionWithCircle (source: SimVertex, target: SimVertex): { x: number, y: number } {
             if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return { x: -99, y: -99 }
             const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
             const distanceBorder = distanceCenter - target.radius - arrowTipSize / 2
@@ -174,8 +181,6 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
 
     const arrowTipSize = 6
 
-    // TODO tooltips with graph properties
-
     return (
         <>
             <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w} -${svgBoundingRect.h} ${svgBoundingRect.w * 2} ${svgBoundingRect.h * 2}`}>
@@ -186,17 +191,6 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
                         <path d="M 0 0 L 10 5 L 0 10 z" />
                     </marker>
                 </defs>
-
-                {
-                    props.graphs.map((_, i) => (
-                        <>
-                            <g id={`links-${i}`}></g>
-                            <g id={`nodes-${i}`}></g>
-                        </>
-                    ))
-                }
-
-                <g id="tooltip"></g>
             </svg>
         </>
     )
