@@ -52,6 +52,10 @@ export class Graph<IdType = string> {
         return d3.map(this.adjMap.keys(), x => x)
     }
 
+    public order (): number {
+        return this.vertices().length
+    }
+
     public neighbours (u: IdType): IdType[] {
         const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
@@ -60,5 +64,13 @@ export class Graph<IdType = string> {
 
     public edges (): Array<[IdType, IdType]> {
         return Array.from(this.adjMap.entries()).flatMap(([u, adjList]) => adjList.map<[IdType, IdType]>(v => ([u, v])))
+    }
+
+    public size (): number {
+        if (this.directed) {
+            return this.edges().length
+        } else {
+            return this.edges().length / 2
+        }
     }
 }

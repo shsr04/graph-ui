@@ -17,7 +17,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
 
     function getTooltip (graph: Graph): string {
         const treeString = graph.properties.isTree ? `tree = ${graph.properties.isTree}` : `connected = ${graph.properties.isConnected}\nacyclic = ${graph.properties.isAcyclic}`
-        return `name = '${graph.name}'\n${treeString}`
+        return `name = '${graph.name}'\n${treeString}\ncomplete = ${graph.properties.isComplete}\nbipartite = ${graph.properties.isBipartite}`
     }
 
     const graphs = props.graphs.map<SimGraph>(graph => ({
