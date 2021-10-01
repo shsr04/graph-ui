@@ -2,7 +2,7 @@ import { Graph } from './Graph'
 
 export type Colour = 'white' | 'grey' | 'black'
 
-type VertexFunction<T> = (u: T) => void
+type VertexFunction<T> = (u: T, parent: T|null) => void
 type EdgeFunction<T> = (u: T, k: number, colour: Colour) => void
 
 export interface DfsFunctions<T> {
@@ -29,7 +29,7 @@ export function dfs<T> (g: Graph<T>, f?: DfsFunctions<T>): Map<T, T | null> {
 }
 
 function visit<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predecessor: Map<T, T | null>, f?: DfsFunctions<T>): void {
-    f?.preprocess?.(u)
+    f?.preprocess?.(u, predecessor.get(u) ?? null)
     colour.set(u, 'grey')
     for (let k = 0; k < g.neighbours(u).length; k++) {
         const v = g.adj(u, k)
@@ -43,5 +43,5 @@ function visit<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predecessor: Map<T
         f?.postexplore?.(u, k, c)
     }
     colour.set(u, 'black')
-    f?.postprocess?.(u)
+    f?.postprocess?.(u, predecessor.get(u) ?? null)
 }
