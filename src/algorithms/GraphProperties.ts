@@ -57,6 +57,9 @@ export interface GraphProperties {
      */
     isWheel: boolean
 
+    /**
+     * A graph is a gear if it can be obtained from a wheel graph by adding one vertex between every two vertices on the outer cycle.
+     */
     isGear: boolean
 
     /**

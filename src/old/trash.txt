@@ -31,3 +31,32 @@
 //     setText(x => x.replace(new RegExp(`\\s{0,${indentSize}}$`), ""))
 //     setIndentation(x => x + indentSize)
 // }
+
+
+// overlay not needed any more:
+// nodeGroup.selectAll<SVGCircleElement, SimVertex>('.drag-overlay')
+//     .data(v)
+//     .join('circle')
+//     .attr('class', 'drag-overlay')
+//     .attr('cx', u => u.x ?? null)
+//     .attr('cy', u => u.y ?? null)
+//     .attr('r', u => u.radius)
+//     .attr('stroke', 'transparent')
+//     .attr('fill', 'transparent')
+//     .call(options?.dragHandler ?? (() => {}))
+//     .on('mousemove', function (event) {
+//         const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
+//         const [x, y] = d3.pointer(event, this)
+//         const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
+//         tooltipGroup.selectAll('rect').data([null]).join('rect')
+//         // TODO rect autosize + background
+//         tooltipGroup.selectAll('text').data([null]).join('text')
+//             .style('font-family', 'monospace')
+//             .attr('transform', `translate(${x + 30},${y})`)
+//             .selectAll('tspan').data(lines).join('tspan')
+//             .attr('x', 0).attr('dy', '1.25em')
+//             .text(line => line)
+//     })
+//     .on('mouseleave', () => {
+//         svg.select('#tooltip').remove()
+//     })

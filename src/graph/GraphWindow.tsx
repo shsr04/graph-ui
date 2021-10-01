@@ -16,7 +16,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     }
 
     function getTooltip (graph: Graph): string {
-        const tooltip = [`name = '${graph.name}`, `connected = ${graph.properties.isConnected}`]
+        const tooltip = [`name = '${graph.name}'`, `connected = ${graph.properties.isConnected}`]
         if (graph.properties.isTree) tooltip.push('tree = true')
         else if (graph.properties.isAcyclic) tooltip.push('acyclic = true')
         else if (graph.properties.isCycle) tooltip.push('cycle = true')

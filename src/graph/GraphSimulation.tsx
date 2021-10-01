@@ -1,5 +1,7 @@
-import * as d3 from 'd3'
-import { useEffect, useRef } from 'react'
+import * as d3 from 'd3';
+import { useEffect, useRef } from 'react';
+import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
+import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 
 export interface SimGraph {
     index: number
@@ -56,7 +58,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             })
         }
 
-        function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
+        function handleDrag(simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
             return d3.drag<SVGCircleElement, SimVertex>()
                 .on('start', (event) => {
                     if (event.active > 0) return
@@ -81,7 +83,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
         }
     }, [props.graphs])
 
-    function drawSimulatedGraph (graph: SimGraph, options?: {
+    function drawSimulatedGraph(graph: SimGraph, options?: {
         colorCode?: string
         dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
     }): void {
@@ -106,6 +108,9 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('r', u => u.radius)
             .attr('stroke', options?.colorCode ?? 'black')
             .attr('fill', 'white')
+            .call(options?.dragHandler ?? (() => { }))
+            .call(SpanningTreeVisualizer)
+            .call(TooltipVisualizer, svg, graph)
 
         nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
             .data(v)
@@ -117,33 +122,34 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('y', u => (u.y ?? 0) + u.radius / 2)
             .attr('font-size', u => u.radius)
             .attr('fill', 'black')
+            .style("pointer-events","none")
 
-        nodeGroup.selectAll<SVGCircleElement, SimVertex>('.drag-overlay')
-            .data(v)
-            .join('circle')
-            .attr('class', 'drag-overlay')
-            .attr('cx', u => u.x ?? null)
-            .attr('cy', u => u.y ?? null)
-            .attr('r', u => u.radius)
-            .attr('stroke', 'transparent')
-            .attr('fill', 'transparent')
-            .call(options?.dragHandler ?? (() => { }))
-            .on('mousemove', function (event, d) {
-                const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
-                const [x, y] = d3.pointer(event, this)
-                const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
-                tooltipGroup.selectAll('rect').data([null]).join('rect')
-                // TODO rect autosize + background
-                tooltipGroup.selectAll('text').data([null]).join('text')
-                    .style('font-family', 'monospace')
-                    .attr('transform', `translate(${x + 30},${y})`)
-                    .selectAll('tspan').data(lines).join('tspan')
-                    .attr('x', 0).attr('dy', '1.25em')
-                    .text(line => line)
-            })
-            .on('mouseleave', () => {
-                svg.select('#tooltip').remove()
-            })
+        // nodeGroup.selectAll<SVGCircleElement, SimVertex>('.drag-overlay')
+        //     .data(v)
+        //     .join('circle')
+        //     .attr('class', 'drag-overlay')
+        //     .attr('cx', u => u.x ?? null)
+        //     .attr('cy', u => u.y ?? null)
+        //     .attr('r', u => u.radius)
+        //     .attr('stroke', 'transparent')
+        //     .attr('fill', 'transparent')
+        //     .call(options?.dragHandler ?? (() => {}))
+        //     .on('mousemove', function (event) {
+        //         const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
+        //         const [x, y] = d3.pointer(event, this)
+        //         const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
+        //         tooltipGroup.selectAll('rect').data([null]).join('rect')
+        //         // TODO rect autosize + background
+        //         tooltipGroup.selectAll('text').data([null]).join('text')
+        //             .style('font-family', 'monospace')
+        //             .attr('transform', `translate(${x + 30},${y})`)
+        //             .selectAll('tspan').data(lines).join('tspan')
+        //             .attr('x', 0).attr('dy', '1.25em')
+        //             .text(line => line)
+        //     })
+        //     .on('mouseleave', () => {
+        //         svg.select('#tooltip').remove()
+        //     })
 
         linkGroup.selectAll<SVGLineElement, SimEdge>('line')
             .data(e)
@@ -161,7 +167,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
          * @param target Target vertex
          * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
          */
-        function intersectionWithCircle (source: SimVertex, target: SimVertex): { x: number, y: number } {
+        function intersectionWithCircle(source: SimVertex, target: SimVertex): { x: number, y: number } {
             if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return { x: -99, y: -99 }
             const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
             const distanceBorder = distanceCenter - target.radius - arrowTipSize / 2
