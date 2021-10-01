@@ -18,10 +18,15 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     function getTooltip (graph: Graph): string {
         const tooltip = [`name = '${graph.name}`, `connected = ${graph.properties.isConnected}`]
         if (graph.properties.isTree) tooltip.push('tree = true')
-        else if (graph.properties.isAcyclic) tooltip.push(`acyclic = ${graph.properties.isAcyclic}`)
-        if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite = true')
+        else if (graph.properties.isAcyclic) tooltip.push('acyclic = true')
+        else if (graph.properties.isCycle) tooltip.push('cycle = true')
+        if (graph.properties.isEulerian) tooltip.push('eulerian = true')
+        else if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite = true')
         else if (graph.properties.isBipartite) tooltip.push('bipartite = true')
         else if (graph.properties.isComplete) tooltip.push('complete = true')
+        if (graph.properties.isStar) tooltip.push('star = true')
+        if (graph.properties.isWheel) tooltip.push('wheel = true')
+        if (graph.properties.isGear) tooltip.push('gear = true')
         return tooltip.join('\n')
     }
 

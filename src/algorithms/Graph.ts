@@ -2,9 +2,9 @@ import { getProperties, GraphProperties } from './GraphProperties'
 import * as d3 from 'd3'
 
 /**
- * A graph is a pair (V,E) such that E = {(u,v) : u,v in V}.
- * This graph representation uses an adjacency map to store the vertices and edges.
- * The graph is either directed or undirected.
+ * A graph is a pair G=(V,E) such that E = {{u,v} : u,v in V; u != v}.
+ * A directed graph ("digraph") is a pair G=(V,E) such that E = {(u,v) : u,v in V}.
+ * Thus, a digraph is a graph which has directed edges and allows loops and double edges.
  */
 export class Graph<IdType = string> {
     public properties: GraphProperties

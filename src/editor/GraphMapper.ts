@@ -42,7 +42,7 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
         const sourceAdj = adj.get(edge[0]) ?? []
         const targetAdj = adj.get(edge[1]) ?? []
 
-        // self-edges are only allowed in digraphs
+        // loops (self-edges) are only allowed in digraphs
         if (edge[0] !== edge[1] || g.type === 'digraph') { sourceAdj.push(edge[1]) }
         // if G is a graph, add the reverse edge
         if (g.type === 'graph') { targetAdj.push(edge[0]) }
