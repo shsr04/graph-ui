@@ -1,4 +1,5 @@
 
+import { dfs } from '../algorithms/Dfs'
 import { Graph } from '../algorithms/Graph'
 import GraphSimulation, { SimEdge, SimGraph, SimVertex } from './GraphSimulation'
 
@@ -30,6 +31,19 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return tooltip.join('\n')
     }
 
+    function handleVisualizeSpanningTree (graphId: number, rootVertex: string): Array<[string, string]> {
+        const edges: Array<[string, string]> = []
+        const g = props.graphs[graphId]
+        dfs(g, {
+            preexplore: (u, k, c) => {
+                if (c === 'white') {
+                    edges.push([u, g.adj(u, k)])
+                }
+            }
+        })
+        return edges
+    }
+
     const graphs = props.graphs.map<SimGraph>(graph => ({
         index: graph.index,
         name: graph.name,
@@ -44,7 +58,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
             width: '90%',
             height: '90%'
         }}>
-            <GraphSimulation graphs={graphs} />
+            <GraphSimulation graphs={graphs} onVisualizeSpanningTree={handleVisualizeSpanningTree} />
         </div>
     </>
 }

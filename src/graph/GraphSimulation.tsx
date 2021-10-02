@@ -1,5 +1,5 @@
-import * as d3 from 'd3';
-import { useEffect, useRef } from 'react';
+import * as d3 from 'd3'
+import { useEffect, useRef } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 
@@ -19,8 +19,11 @@ export interface SimVertex extends d3.SimulationNodeDatum {
 
 export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 
+export type VisualizationType = 'spanning_tree'
+
 interface GraphSimulationProps {
     graphs: SimGraph[]
+    onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
 }
 
 /**
@@ -28,7 +31,7 @@ interface GraphSimulationProps {
  *
  * Adapted from https://reactfordataviz.com/articles/force-directed-graphs-with-react-and-d3v7/
  */
-const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
+const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
 
     useEffect(() => {
@@ -58,7 +61,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             })
         }
 
-        function handleDrag(simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
+        function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
             return d3.drag<SVGCircleElement, SimVertex>()
                 .on('start', (event) => {
                     if (event.active > 0) return
@@ -81,9 +84,9 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
                 simulation.stop()
             }
         }
-    }, [props.graphs])
+    }, [props.graphs, onVisualizeSpanningTree])
 
-    function drawSimulatedGraph(graph: SimGraph, options?: {
+    function drawSimulatedGraph (graph: SimGraph, options?: {
         colorCode?: string
         dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
     }): void {
@@ -99,6 +102,19 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
         const linkGroup = svg.selectAll(`#links-${id}`).data([null]).join('g').attr('id', `links-${id}`)
         const nodeGroup = svg.selectAll(`#nodes-${id}`).data([null]).join('g').attr('id', `nodes-${id}`)
 
+        const edges = linkGroup.selectAll<SVGLineElement, SimEdge>('line')
+            .data(e)
+            .join('line')
+            .attr('x1', e => (e.source as SimVertex).x ?? null)
+            .attr('y1', e => (e.source as SimVertex).y ?? null)
+            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).x)
+            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).y)
+            .attr('stroke', 'black')
+            .attr('stroke-width', function () {
+                return this.getAttribute('stroke-width')
+            })
+            .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
+
         nodeGroup.selectAll<SVGCircleElement, SimVertex>('circle.vertex')
             .data(v)
             .join('circle')
@@ -109,7 +125,7 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('stroke', options?.colorCode ?? 'black')
             .attr('fill', 'white')
             .call(options?.dragHandler ?? (() => { }))
-            .call(SpanningTreeVisualizer)
+            .call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
             .call(TooltipVisualizer, svg, graph)
 
         nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
@@ -122,52 +138,14 @@ const GraphSimulation = (props: GraphSimulationProps): JSX.Element => {
             .attr('y', u => (u.y ?? 0) + u.radius / 2)
             .attr('font-size', u => u.radius)
             .attr('fill', 'black')
-            .style("pointer-events","none")
-
-        // nodeGroup.selectAll<SVGCircleElement, SimVertex>('.drag-overlay')
-        //     .data(v)
-        //     .join('circle')
-        //     .attr('class', 'drag-overlay')
-        //     .attr('cx', u => u.x ?? null)
-        //     .attr('cy', u => u.y ?? null)
-        //     .attr('r', u => u.radius)
-        //     .attr('stroke', 'transparent')
-        //     .attr('fill', 'transparent')
-        //     .call(options?.dragHandler ?? (() => {}))
-        //     .on('mousemove', function (event) {
-        //         const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
-        //         const [x, y] = d3.pointer(event, this)
-        //         const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
-        //         tooltipGroup.selectAll('rect').data([null]).join('rect')
-        //         // TODO rect autosize + background
-        //         tooltipGroup.selectAll('text').data([null]).join('text')
-        //             .style('font-family', 'monospace')
-        //             .attr('transform', `translate(${x + 30},${y})`)
-        //             .selectAll('tspan').data(lines).join('tspan')
-        //             .attr('x', 0).attr('dy', '1.25em')
-        //             .text(line => line)
-        //     })
-        //     .on('mouseleave', () => {
-        //         svg.select('#tooltip').remove()
-        //     })
-
-        linkGroup.selectAll<SVGLineElement, SimEdge>('line')
-            .data(e)
-            .join('line')
-            .attr('x1', e => (e.source as SimVertex).x ?? null)
-            .attr('y1', e => (e.source as SimVertex).y ?? null)
-            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).x)
-            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).y)
-            .attr('stroke', 'black')
-            .attr('strokeWidth', 2)
-            .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
+            .style('pointer-events', 'none')
 
         /**
          * @param source Source vertex
          * @param target Target vertex
          * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
          */
-        function intersectionWithCircle(source: SimVertex, target: SimVertex): { x: number, y: number } {
+        function intersectionWithCircle (source: SimVertex, target: SimVertex): { x: number, y: number } {
             if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return { x: -99, y: -99 }
             const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
             const distanceBorder = distanceCenter - target.radius - arrowTipSize / 2
