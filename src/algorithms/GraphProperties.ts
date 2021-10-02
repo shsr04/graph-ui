@@ -120,6 +120,9 @@ function isCompleteBipartite<T> (g: Graph<T>): boolean {
 }
 
 function isStar<T> (g: Graph<T>): boolean {
+    if (!isCompleteBipartite(g)) {
+        return false
+    }
     const partitions = decomposeBipartite(g)
     if (partitions === null) {
         return false
@@ -139,12 +142,14 @@ function isEulerian<T> (g: Graph<T>): boolean {
 }
 
 function isWheel<T> (g: Graph<T>): boolean {
+    if (g.order() < 4) return false
     // Unverified: is it sufficient to check the degrees?
     const degreesDesc = g.vertices().map(u => g.deg(u)).sort((u, v) => v - u)
     return degreesDesc[0] === g.order() - 1 && degreesDesc.slice(1).every(x => x === 3)
 }
 
 function isGear<T> (g: Graph<T>): boolean {
+    if (g.order() < 7) return false
     // Unverified: is it sufficient to check the degree/size?
     return isBipartite(g) && Array.from(Array(10).keys()).some(n => g.order() === 2 * n + 1 && g.size() === 3 * n)
 }

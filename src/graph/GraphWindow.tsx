@@ -16,11 +16,18 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     })
 
     function getSimVertices (graph: Graph): SimVertex[] {
-        return graph.vertices().map(id => ({ id, radius: 20 }))
+        return graph.vertices().map(id => ({ id, graphId: graph.id, radius: 20 }))
     }
 
-    function getSimEdges (graph: Graph): SimEdge[] {
-        return graph.vertices().flatMap(source => graph.neighbours(source).map(target => ({ source, target })))
+    function getSimEdges (graph: Graph, vertices: SimVertex[]): SimEdge[] {
+        function getVertex (vertices: SimVertex[], id: string): SimVertex {
+            const result = vertices.find(x => x.id === id)
+            if (result === undefined) {
+                throw Error(`INTERNAL ERROR: Vertex ${id} not found`)
+            }
+            return result
+        }
+        return graph.vertices().flatMap(u => graph.neighbours(u).map(v => ({ source: getVertex(vertices, u), target: getVertex(vertices, v) })))
     }
 
     function getTooltip (graph: Graph): string {
@@ -55,15 +62,18 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     }
 
     const graphs = useMemo(
-        () =>
-            props.graphs.map<SimGraph>(graph => ({
+        () => props.graphs.map<SimGraph>(graph => {
+            const vertices = getSimVertices(graph)
+            const edges = getSimEdges(graph, vertices)
+            return {
                 id: graph.id,
                 name: graph.name,
                 edgeType: graph.directed ? 'arrow' : 'line',
-                vertices: getSimVertices(graph),
-                edges: getSimEdges(graph),
+                vertices,
+                edges,
                 tooltip: getTooltip(graph)
-            })),
+            }
+        }),
         [props.graphs]
     )
 

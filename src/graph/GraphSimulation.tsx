@@ -14,6 +14,7 @@ export interface SimGraph {
 
 export interface SimVertex extends d3.SimulationNodeDatum {
     id: number | string
+    graphId: number
     radius: number
 }
 
@@ -46,29 +47,25 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
     useEffect(() => {
         if (svgRef.current === null || props.graphs.length === 0) return
 
-        const simulations = props.graphs.map(graph => {
-            const vertices = [...graph.vertices]
-            const edges = [...graph.edges]
-            return {
-                graph,
-                simulation: d3.forceSimulation<SimVertex, SimEdge>(vertices)
-                    .nodes(vertices)
-                    .force('center', d3.forceCenter(0, 0).strength(0.1))
-                    .force('charge', d3.forceManyBody().strength(-500))
-                    .force('collision', d3.forceCollide(node => node.radius * 1.5))
-                    .force('links', d3.forceLink<SimVertex, SimEdge>(edges).id(vertex => vertex.id).links(edges))
+        const vertices = props.graphs.flatMap(g => g.vertices)
+        const edges = props.graphs.flatMap(g => g.edges)
+        console.log(vertices, edges)
+
+        const simulation = d3.forceSimulation<SimVertex, SimEdge>()
+            .nodes(vertices)
+            .force('center', d3.forceCenter(0, 0).strength(0.1))
+            .force('charge', d3.forceManyBody().strength(-100))
+            .force('collision', d3.forceCollide(node => node.radius * 1.5))
+            .force('links', d3.forceLink<SimVertex, SimEdge>().id(vertex => vertex.id).links(edges))
+            .alpha(0.1)
+            .restart()
+
+        const colorScale = d3.scaleOrdinal(props.graphs.map(g => g.id), d3.schemeCategory10)
+        simulation.on('tick', () => {
+            for (const graph of props.graphs) {
+                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), visualizers: props.visualizers, onVisualizeSpanningTree })
             }
         })
-
-        const colorScale = d3.scaleOrdinal(simulations.map(({ graph }) => graph.id), d3.schemeCategory10)
-
-        for (const { graph, simulation } of simulations) {
-            simulation.alpha(0.1).restart()
-
-            simulation.on('tick', () => {
-                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), visualizers: props.visualizers, onVisualizeSpanningTree })
-            })
-        }
 
         function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
             return d3.drag<SVGCircleElement, SimVertex>()
@@ -89,9 +86,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
         }
 
         return () => {
-            for (const { simulation } of simulations) {
-                simulation.stop()
-            }
+            simulation.stop()
         }
     }, [props.graphs, props.visualizers, onVisualizeSpanningTree])
 
