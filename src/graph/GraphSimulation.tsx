@@ -19,11 +19,19 @@ export interface SimVertex extends d3.SimulationNodeDatum {
 
 export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 
+export enum VisualizerType {
+    tooltip = 'tooltip',
+    spanningTree = 'spanningTree'
+}
+
+export const DEFAULT_CIRCLE_FILL_COLOR = 'white'
+export const FOCUSED_CIRCLE_FILL_COLOR = 'orangered'
 export const DEFAULT_LINE_STROKE_WIDTH = 1
-export const BOLD_LINE_STROKE_WIDTH = 10
+export const BOLD_LINE_STROKE_WIDTH = 5
 
 interface GraphSimulationProps {
     graphs: SimGraph[]
+    visualizers: VisualizerType[]
     onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
 }
 
@@ -58,7 +66,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
             simulation.alpha(0.1).restart()
 
             simulation.on('tick', () => {
-                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), onVisualizeSpanningTree })
+                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), visualizers: props.visualizers, onVisualizeSpanningTree })
             })
         }
 
@@ -85,11 +93,12 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
                 simulation.stop()
             }
         }
-    }, [props.graphs, onVisualizeSpanningTree])
+    }, [props.graphs, props.visualizers, onVisualizeSpanningTree])
 
     function drawSimulatedGraph (graph: SimGraph, options?: {
         colorCode?: string
         dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
+        visualizers: VisualizerType[]
         onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
     }): void {
         if (svgRef.current === null) return
@@ -113,11 +122,11 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
             .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex, graph.edgeType === 'arrow').y)
             .attr('stroke', 'black')
             .attr('stroke-width', function () {
-                return this.getAttribute('stroke-width')
+                return this.getAttribute('stroke-width') ?? DEFAULT_LINE_STROKE_WIDTH
             })
             .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
 
-        nodeGroup.selectAll<SVGCircleElement, SimVertex>('circle.vertex')
+        const vertices = nodeGroup.selectAll<SVGCircleElement, SimVertex>('circle.vertex')
             .data(v)
             .join('circle')
             .attr('class', 'vertex')
@@ -125,10 +134,21 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
             .attr('cy', u => u.y ?? null)
             .attr('r', u => u.radius)
             .attr('stroke', options?.colorCode ?? 'black')
-            .attr('fill', 'white')
+            .attr('fill', function () {
+                return this.getAttribute('fill') ?? DEFAULT_CIRCLE_FILL_COLOR
+            })
             .call(options?.dragHandler ?? (() => { }))
-            .call(SpanningTreeVisualizer, graph, edges, options?.onVisualizeSpanningTree ?? (() => []))
-            .call(TooltipVisualizer, svg, graph)
+            .call((sel) => {
+                const handlers = Object.keys(VisualizerType).map(x => '.' + x).join(' ')
+                sel.on(handlers, null)
+            })
+
+        if (options?.visualizers.includes(VisualizerType.spanningTree) === true) {
+            vertices.call(SpanningTreeVisualizer, graph, edges, options.onVisualizeSpanningTree)
+        }
+        if (options?.visualizers.includes(VisualizerType.tooltip) === true) {
+            vertices.call(TooltipVisualizer, svg, graph)
+        }
 
         nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
             .data(v)
@@ -162,8 +182,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
 
     const svgBoundingRect = svgRef.current !== null
         ? {
-            w: svgRef.current.getBoundingClientRect().width / 2,
-            h: svgRef.current.getBoundingClientRect().height / 2
+            w: svgRef.current.getBoundingClientRect().width,
+            h: svgRef.current.getBoundingClientRect().height
         }
         : { w: 0, h: 0 }
 
@@ -171,7 +191,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
 
     return (
         <>
-            <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w} -${svgBoundingRect.h} ${svgBoundingRect.w * 2} ${svgBoundingRect.h * 2}`}>
+            <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w / 2} -${svgBoundingRect.h / 2} ${svgBoundingRect.w} ${svgBoundingRect.h}`}>
                 <defs>
                     <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
                         markerWidth={arrowTipSize} markerHeight={arrowTipSize}

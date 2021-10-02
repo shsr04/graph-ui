@@ -1,0 +1,22 @@
+#editor-wrapper {
+    background: white;
+    /* border: 2px solid darkgray */
+    width: 90%;
+    height: 90%;
+    display: grid;
+    grid-template-columns: 5% auto;
+    grid-template-rows: 600px auto;
+    font-family: monospace;
+}
+
+#line-numbers {
+    overflow: hidden;
+    height: 100%;
+    margin-top: 0.35em;
+    line-height: 1.25em;
+}
+
+#text-input {
+    resize: none;
+    line-height: 1.25em;
+}

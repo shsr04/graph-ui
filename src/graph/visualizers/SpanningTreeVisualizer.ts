@@ -1,4 +1,4 @@
-import { SimEdge, SimVertex, SimGraph, BOLD_LINE_STROKE_WIDTH, DEFAULT_LINE_STROKE_WIDTH } from '../GraphSimulation'
+import { SimEdge, SimVertex, SimGraph, BOLD_LINE_STROKE_WIDTH, DEFAULT_LINE_STROKE_WIDTH, FOCUSED_CIRCLE_FILL_COLOR, DEFAULT_CIRCLE_FILL_COLOR } from '../GraphSimulation'
 import * as d3 from 'd3'
 
 export function SpanningTreeVisualizer (
@@ -9,8 +9,8 @@ export function SpanningTreeVisualizer (
 ): void {
     selection
         .on('mouseenter.spanningTree', (_, vertex) => {
+            selection.attr('fill', u => u.id === vertex.id ? FOCUSED_CIRCLE_FILL_COLOR : DEFAULT_CIRCLE_FILL_COLOR)
             const edges = spanningTreeFactory(graph.id, vertex.id.toString())
-            console.log('spanning tree = ', edges)
             edgeSelection.attr('stroke-width', e => {
                 if (edges.some(([u, v]) => u === (e.source as SimVertex).id.toString() && v === (e.target as SimVertex).id.toString())) {
                     return BOLD_LINE_STROKE_WIDTH
@@ -19,6 +19,7 @@ export function SpanningTreeVisualizer (
             })
         })
         .on('mouseleave.spanningTree', () => {
+            selection.attr('fill', DEFAULT_CIRCLE_FILL_COLOR)
             edgeSelection
                 // "edgeSelection.transition is not a function" ???
                 .attr('stroke-width', DEFAULT_LINE_STROKE_WIDTH)

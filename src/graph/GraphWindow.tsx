@@ -1,14 +1,20 @@
 
-import { useCallback } from 'react'
+import { ChangeEvent, useCallback, useMemo, useState } from 'react'
 import { visitDfs } from '../algorithms/Dfs'
 import { Graph } from '../algorithms/Graph'
-import GraphSimulation, { SimEdge, SimGraph, SimVertex } from './GraphSimulation'
+import GraphSimulation, { SimEdge, SimGraph, SimVertex, VisualizerType } from './GraphSimulation'
+import './GraphWindow.css'
 
 interface GraphWindowProps {
     graphs: Graph[]
 }
 
 const GraphWindow = (props: GraphWindowProps): JSX.Element => {
+    const [selectedVisualizers, setSelectedVisualizer] = useState({
+        [VisualizerType.tooltip]: true,
+        [VisualizerType.spanningTree]: false
+    })
+
     function getSimVertices (graph: Graph): SimVertex[] {
         return graph.vertices().map(id => ({ id, radius: 20 }))
     }
@@ -43,21 +49,41 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return edges
     }, [props.graphs])
 
-    const graphs = props.graphs.map<SimGraph>(graph => ({
-        id: graph.id,
-        name: graph.name,
-        edgeType: graph.directed ? 'arrow' : 'line',
-        vertices: getSimVertices(graph),
-        edges: getSimEdges(graph),
-        tooltip: getTooltip(graph)
-    }))
+    function handleChangeVisualizer (event: ChangeEvent<HTMLInputElement>): void {
+        const visualizer = VisualizerType[event.target.value as keyof typeof VisualizerType]
+        setSelectedVisualizer(prev => ({ ...prev, [visualizer]: event.target.checked }))
+    }
+
+    const graphs = useMemo(
+        () =>
+            props.graphs.map<SimGraph>(graph => ({
+                id: graph.id,
+                name: graph.name,
+                edgeType: graph.directed ? 'arrow' : 'line',
+                vertices: getSimVertices(graph),
+                edges: getSimEdges(graph),
+                tooltip: getTooltip(graph)
+            })),
+        [props.graphs]
+    )
+
+    console.log(selectedVisualizers)
 
     return <>
-        <div style={{
-            width: '90%',
-            height: '90%'
-        }}>
-            <GraphSimulation graphs={graphs} onVisualizeSpanningTree={handleVisualizeSpanningTree} />
+        <div id="graph-wrapper">
+            <GraphSimulation
+                graphs={graphs}
+                visualizers={Object.entries(selectedVisualizers).filter(x => x[1]).map(x => x[0] as VisualizerType)}
+                onVisualizeSpanningTree={handleVisualizeSpanningTree}
+            />
+            <div id="graph-configs">
+                <label>Visualizers
+                    <span style={{ margin: '1em' }}>
+                        <label>Tooltip <input type="checkbox" key={VisualizerType.tooltip} value={VisualizerType.tooltip} checked={selectedVisualizers.tooltip} onChange={handleChangeVisualizer} /></label>
+                        <label>Spanning tree <input type="checkbox" key={VisualizerType.spanningTree} value={VisualizerType.spanningTree} checked={selectedVisualizers.spanningTree} onChange={handleChangeVisualizer} /></label>
+                    </span>
+                </label>
+            </div>
         </div>
     </>
 }

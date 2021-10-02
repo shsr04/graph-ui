@@ -3,6 +3,7 @@ import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { mapToGraph } from './GraphMapper'
 import { Graph } from '../algorithms/Graph'
+import './EditorWindow.css'
 
 interface DotParserSyntaxError extends Error {
     message: string
@@ -53,37 +54,26 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
 
     return (
         <>
-            <div style={{
-                background: 'white',
-                // border: "2px solid darkgray",
-                width: '90%',
-                height: '90%',
-                display: 'grid',
-                gridTemplateColumns: '5% auto',
-                gridTemplateRows: '600px auto'
-            }}>
-                <div
-                    style={{
-                        overflow: 'hidden',
-                        fontFamily: 'monospace',
-                        marginTop: '0.35em'
-                    }}
-                >{lineNumbers}</div>
-                <textarea placeholder="Enter graph specification..." cols={80} rows={48} autoComplete="off" tabIndex={-1}
+            <div id="editor-wrapper">
+                <div id="line-numbers">{lineNumbers}</div>
+
+                <textarea placeholder="Enter graph specification..."
+                    id="text-input"
+                    cols={80} rows={48} autoComplete="off" tabIndex={-1}
                     ref={textAreaRef}
                     value={text}
                     onChange={handleChangeText}
                     onKeyDown={handleKeyDown}
                     style={{
-                        resize: 'none',
                         border: (parseError != null) ? '2px dashed red' : '2px solid black'
                     }}
                 ></textarea>
+
                 <div style={{
                     gridColumn: '1 / span 2'
-                }}><pre style={{
-                        whiteSpace: 'pre-wrap'
-                    }}>{parseResult !== undefined ? JSON.stringify(parseResult) : ''}{parseError !== undefined ? parseError.message : ''}</pre></div>
+                }}>
+                    <pre style={{ whiteSpace: 'pre-wrap' }}>{parseError !== undefined ? parseError.message : ''}</pre>
+                </div>
             </div>
         </>
     )
