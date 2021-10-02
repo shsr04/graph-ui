@@ -3,6 +3,7 @@ import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { mapToGraph } from './GraphMapper'
 import { Graph } from '../algorithms/Graph'
+import {generateGraph} from '../algorithms/GraphGenerator'
 import './EditorWindow.css'
 
 interface DotParserSyntaxError extends Error {

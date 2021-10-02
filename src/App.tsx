@@ -1,16 +1,25 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { Graph } from './algorithms/Graph'
 import './App.css'
 import EditorWindow from './editor/EditorWindow'
-import { Graph } from './algorithms/Graph'
 import GraphWindow from './graph/GraphWindow'
 
-function App (): JSX.Element {
-    const [graphs, setGraphs] = useState<Graph[]>([])
+type GraphDatabase = { editor: Graph[], random: Graph[] }
+
+function App(): JSX.Element {
+    const [graphDb, setGraphDb] = useState<GraphDatabase>({ editor: [], random: [] })
+    //generateGraph(20, 0.2, 10, i => i.toString())
+
+    const handleEditorInputGraphs = useCallback(input => {
+        setGraphDb({...graphDb, ...{ editor: input}})
+    }, [])
+
+    console.log(graphDb.random)
 
     return (
         <div className="App">
-            <EditorWindow onInputGraphs={setGraphs} />
-            <GraphWindow graphs={graphs} />
+            <EditorWindow onInputGraphs={handleEditorInputGraphs} />
+            <GraphWindow graphs={Object.values(graphDb).flat()} />
         </div>
     )
 }

@@ -29,7 +29,7 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
         // map edge lists to pairs
         .flatMap(e => d3.pairs(e))
 
-    let adj = new Map()
+    let adj = new Map<string,string[]>()
 
     // add predefined vertices
     for (const vertex of vertices) {
@@ -53,7 +53,7 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
 
     // if G is a graph, discard duplicate edges
     if (g.type === 'graph') {
-        adj = new Map(d3.map(adj.entries(), ([vertex, adjList]) => ([vertex, Array.from(new Set(adjList))])))
+        adj = new Map(Array.from(adj.entries()).map(([vertex, adjList]) => ([vertex, Array.from(new Set(adjList))])))
     }
 
     return new Graph(i, g.id?.toString() ?? '', g.type === 'digraph', adj)

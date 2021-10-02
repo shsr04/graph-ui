@@ -47,7 +47,8 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
 
     const handleVisualizeSpanningTree = useCallback((graphId: number, rootVertex: string): Array<[string, string]> => {
         const edges: Array<[string, string]> = []
-        const g = props.graphs[graphId]
+        const g = props.graphs.find(x => x.id===graphId)
+        if(g=== undefined) throw Error(`INTERNAL ERROR: graph ${graphId} not found`)
         visitDfs(g, rootVertex, new Map(g.vertices().map(u => ([u, 'white']))), new Map(), {
             preprocess: (u, p) => {
                 edges.push([p, u])
@@ -76,8 +77,6 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         }),
         [props.graphs]
     )
-
-    console.log(selectedVisualizers)
 
     return <>
         <div id="graph-wrapper">
