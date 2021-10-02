@@ -1,5 +1,6 @@
 
-import { dfs } from '../algorithms/Dfs'
+import { useCallback } from 'react'
+import { visitDfs } from '../algorithms/Dfs'
 import { Graph } from '../algorithms/Graph'
 import GraphSimulation, { SimEdge, SimGraph, SimVertex } from './GraphSimulation'
 
@@ -17,7 +18,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     }
 
     function getTooltip (graph: Graph): string {
-        const tooltip = [`name = '${graph.name}'`, `connected = ${graph.properties.isConnected}`]
+        const tooltip = [`name = '${graph.name}'`, `connected = ${String(graph.properties.isConnected)}`]
         if (graph.properties.isTree) tooltip.push('tree = true')
         else if (graph.properties.isAcyclic) tooltip.push('acyclic = true')
         else if (graph.properties.isCycle) tooltip.push('cycle = true')
@@ -31,21 +32,19 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return tooltip.join('\n')
     }
 
-    function handleVisualizeSpanningTree (graphId: number, rootVertex: string): Array<[string, string]> {
+    const handleVisualizeSpanningTree = useCallback((graphId: number, rootVertex: string): Array<[string, string]> => {
         const edges: Array<[string, string]> = []
         const g = props.graphs[graphId]
-        dfs(g, {
-            preexplore: (u, k, c) => {
-                if (c === 'white') {
-                    edges.push([u, g.adj(u, k)])
-                }
+        visitDfs(g, rootVertex, new Map(g.vertices().map(u => ([u, 'white']))), new Map(), {
+            preprocess: (u, p) => {
+                edges.push([p, u])
             }
         })
         return edges
-    }
+    }, [props.graphs])
 
     const graphs = props.graphs.map<SimGraph>(graph => ({
-        index: graph.index,
+        id: graph.id,
         name: graph.name,
         edgeType: graph.directed ? 'arrow' : 'line',
         vertices: getSimVertices(graph),

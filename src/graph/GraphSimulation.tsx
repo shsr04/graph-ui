@@ -4,7 +4,7 @@ import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 
 export interface SimGraph {
-    index: number
+    id: number
     name: string
     vertices: SimVertex[]
     edges: SimEdge[]
@@ -19,7 +19,8 @@ export interface SimVertex extends d3.SimulationNodeDatum {
 
 export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 
-export type VisualizationType = 'spanning_tree'
+export const DEFAULT_LINE_STROKE_WIDTH = 1
+export const BOLD_LINE_STROKE_WIDTH = 10
 
 interface GraphSimulationProps {
     graphs: SimGraph[]
@@ -31,7 +32,7 @@ interface GraphSimulationProps {
  *
  * Adapted from https://reactfordataviz.com/articles/force-directed-graphs-with-react-and-d3v7/
  */
-const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationProps): JSX.Element => {
+const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
 
     useEffect(() => {
@@ -51,13 +52,13 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
             }
         })
 
-        const colorScale = d3.scaleOrdinal(simulations.map(({ graph }) => graph.index), d3.schemeCategory10)
+        const colorScale = d3.scaleOrdinal(simulations.map(({ graph }) => graph.id), d3.schemeCategory10)
 
         for (const { graph, simulation } of simulations) {
             simulation.alpha(0.1).restart()
 
             simulation.on('tick', () => {
-                drawSimulatedGraph(graph, { colorCode: colorScale(graph.index), dragHandler: handleDrag(simulation) })
+                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), onVisualizeSpanningTree })
             })
         }
 
@@ -89,11 +90,12 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
     function drawSimulatedGraph (graph: SimGraph, options?: {
         colorCode?: string
         dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
+        onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
     }): void {
         if (svgRef.current === null) return
 
         const svg = d3.select(svgRef.current)
-        const id = graph.index
+        const id = graph.id
         const v = graph.vertices
         const e = graph.edges
 
@@ -107,8 +109,8 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
             .join('line')
             .attr('x1', e => (e.source as SimVertex).x ?? null)
             .attr('y1', e => (e.source as SimVertex).y ?? null)
-            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).x)
-            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex).y)
+            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex, graph.edgeType === 'arrow').x)
+            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex, graph.edgeType === 'arrow').y)
             .attr('stroke', 'black')
             .attr('stroke-width', function () {
                 return this.getAttribute('stroke-width')
@@ -125,7 +127,7 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
             .attr('stroke', options?.colorCode ?? 'black')
             .attr('fill', 'white')
             .call(options?.dragHandler ?? (() => { }))
-            .call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
+            .call(SpanningTreeVisualizer, graph, edges, options?.onVisualizeSpanningTree ?? (() => []))
             .call(TooltipVisualizer, svg, graph)
 
         nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
@@ -143,12 +145,14 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
         /**
          * @param source Source vertex
          * @param target Target vertex
+         * @param respectArrow True if the distance should consider additional space for an arrow tip (used in digraphs)
          * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
          */
-        function intersectionWithCircle (source: SimVertex, target: SimVertex): { x: number, y: number } {
+        function intersectionWithCircle (source: SimVertex, target: SimVertex, respectArrow: boolean = false): { x: number, y: number } {
             if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return { x: -99, y: -99 }
             const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
-            const distanceBorder = distanceCenter - target.radius - arrowTipSize / 2
+            let distanceBorder = distanceCenter - target.radius
+            if (respectArrow) distanceBorder -= arrowTipSize / 2
             const ratio = distanceBorder / distanceCenter
             const deltaX = (target.x - source.x) * ratio
             const deltaY = (target.y - source.y) * ratio
@@ -171,7 +175,9 @@ const GraphSimulation = ({onVisualizeSpanningTree, ...props}: GraphSimulationPro
                 <defs>
                     <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
                         markerWidth={arrowTipSize} markerHeight={arrowTipSize}
-                        orient="auto-start-reverse">
+                        markerUnits="userSpaceOnUse"
+                        orient="auto-start-reverse"
+                    >
                         <path d="M 0 0 L 10 5 L 0 10 z" />
                     </marker>
                 </defs>

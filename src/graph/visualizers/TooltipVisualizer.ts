@@ -3,7 +3,7 @@ import { SimGraph, SimVertex } from '../GraphSimulation'
 
 export function TooltipVisualizer (selection: d3.Selection<SVGCircleElement, SimVertex, d3.BaseType, unknown>, svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown>, graph: SimGraph): void {
     selection
-        .on('mousemove', function (event) {
+        .on('mousemove.tooltip', function (event) {
             const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())
             const [x, y] = d3.pointer(event, this)
             const tooltipGroup = svg.selectAll('#tooltip').data([null]).join('g').attr('id', 'tooltip')
@@ -16,7 +16,7 @@ export function TooltipVisualizer (selection: d3.Selection<SVGCircleElement, Sim
                 .attr('x', 0).attr('dy', '1.25em')
                 .text(line => line)
         })
-        .on('mouseout', (event) => {
+        .on('mouseleave.tooltip', () => {
             svg.select('#tooltip').remove()
         })
 }

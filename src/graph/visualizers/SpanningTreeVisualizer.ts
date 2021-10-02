@@ -1,4 +1,4 @@
-import { SimEdge, SimVertex, SimGraph } from '../GraphSimulation'
+import { SimEdge, SimVertex, SimGraph, BOLD_LINE_STROKE_WIDTH, DEFAULT_LINE_STROKE_WIDTH } from '../GraphSimulation'
 import * as d3 from 'd3'
 
 export function SpanningTreeVisualizer (
@@ -8,18 +8,19 @@ export function SpanningTreeVisualizer (
     spanningTreeFactory: (graphId: number, root: string) => Array<[string, string]>
 ): void {
     selection
-        .on('mouseover', (_, vertex) => {
-            const edges = spanningTreeFactory(graph.index, vertex.id.toString()).map(x => new Set(x))
+        .on('mouseenter.spanningTree', (_, vertex) => {
+            const edges = spanningTreeFactory(graph.id, vertex.id.toString())
+            console.log('spanning tree = ', edges)
             edgeSelection.attr('stroke-width', e => {
-                if (edges.some(edgeSet => edgeSet.has((e.source as SimVertex).id.toString()) && edgeSet.has((e.target as SimVertex).id.toString()))) {
-                    return 10
+                if (edges.some(([u, v]) => u === (e.source as SimVertex).id.toString() && v === (e.target as SimVertex).id.toString())) {
+                    return BOLD_LINE_STROKE_WIDTH
                 }
-                return edgeSelection.attr('stroke-width')
+                return DEFAULT_LINE_STROKE_WIDTH
             })
         })
-        // TODO not firing???
-        .on('mouseout', (event) => {
-            console.log(event)
-            edgeSelection.attr('stroke-width', 1)
+        .on('mouseleave.spanningTree', () => {
+            edgeSelection
+                // "edgeSelection.transition is not a function" ???
+                .attr('stroke-width', DEFAULT_LINE_STROKE_WIDTH)
         })
 }

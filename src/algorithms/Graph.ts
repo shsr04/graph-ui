@@ -13,7 +13,7 @@ export class Graph<IdType = string> {
         /**
          * Index of the graph over all stored graphs.
          */
-        public readonly index: number,
+        public readonly id: number,
         /**
          * Display name.
          */
@@ -28,7 +28,7 @@ export class Graph<IdType = string> {
          */
         private readonly adjMap: Map<IdType, IdType[]>
     ) {
-        this.index = index
+        this.id = id
         this.name = name
         this.directed = directed
         this.adjMap = adjMap
@@ -37,14 +37,14 @@ export class Graph<IdType = string> {
 
     public deg (u: IdType): number {
         const adj = this.adjMap.get(u)
-        if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
+        if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
         return this.adjMap.get(u)?.length ?? -1
     }
 
     public adj (u: IdType, k: number): IdType {
         const adj = this.adjMap.get(u)
-        if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
-        if (k >= adj.length) { throw Error(`Vertex ${u} has degree ${adj.length}: therefore, cannot access neighbour #${k}.`) }
+        if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
+        if (k >= adj.length) { throw Error(`Vertex ${JSON.stringify(u)} has degree ${adj.length}: therefore, cannot access neighbour #${k}.`) }
         return adj[k]
     }
 
@@ -58,7 +58,7 @@ export class Graph<IdType = string> {
 
     public neighbours (u: IdType): IdType[] {
         const adj = this.adjMap.get(u)
-        if (adj === undefined) { throw Error(`Vertex ${u} is not in graph ${this.name}.`) }
+        if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
         return adj
     }
 
