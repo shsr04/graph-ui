@@ -4,6 +4,7 @@ import { visitDfs } from '../algorithms/Dfs'
 import { Graph } from '../algorithms/Graph'
 import GraphSimulation, { SimEdge, SimGraph, SimVertex, VisualizerType } from './GraphSimulation'
 import './GraphWindow.css'
+import { colourVertices } from '../algorithms/VertexColouring'
 
 interface GraphWindowProps {
     graphs: Graph[]
@@ -12,7 +13,8 @@ interface GraphWindowProps {
 const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     const [selectedVisualizers, setSelectedVisualizer] = useState({
         [VisualizerType.tooltip]: true,
-        [VisualizerType.spanningTree]: false
+        [VisualizerType.spanningTree]: false,
+        [VisualizerType.vertexColouring]: false
     })
 
     function getSimVertices (graph: Graph): SimVertex[] {
@@ -57,6 +59,12 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return edges
     }, [props.graphs])
 
+    const handleVisualizeVertexColouring = useCallback((graphId: number, rootVertex: string): Map<string, number> => {
+        const g = props.graphs.find(x => x.id === graphId)
+        if (g === undefined) throw Error(`INTERNAL ERROR: graph ${graphId} not found`)
+        return colourVertices(g, rootVertex)
+    }, [props.graphs])
+
     function handleChangeVisualizer (event: ChangeEvent<HTMLInputElement>): void {
         const visualizer = VisualizerType[event.target.value as keyof typeof VisualizerType]
         setSelectedVisualizer(prev => ({ ...prev, [visualizer]: event.target.checked }))
@@ -84,12 +92,14 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                 graphs={graphs}
                 visualizers={Object.entries(selectedVisualizers).filter(x => x[1]).map(x => x[0] as VisualizerType)}
                 onVisualizeSpanningTree={handleVisualizeSpanningTree}
+                onVisualizeVertexColouring={handleVisualizeVertexColouring}
             />
             <div id="graph-configs">
                 <label>Visualizers
                     <span style={{ margin: '1em' }}>
                         <label>Tooltip <input type="checkbox" key={VisualizerType.tooltip} value={VisualizerType.tooltip} checked={selectedVisualizers.tooltip} onChange={handleChangeVisualizer} /></label>
                         <label>Spanning tree <input type="checkbox" key={VisualizerType.spanningTree} value={VisualizerType.spanningTree} checked={selectedVisualizers.spanningTree} onChange={handleChangeVisualizer} /></label>
+                        <label>Vertex colouring <input type="checkbox" key={VisualizerType.vertexColouring} value={VisualizerType.vertexColouring} checked={selectedVisualizers.vertexColouring} onChange={handleChangeVisualizer} /></label>
                     </span>
                 </label>
             </div>

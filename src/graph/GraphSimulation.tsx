@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import { useEffect, useRef } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
+import { VertexColouringVisualizer } from './visualizers/VertexColouringVisualizer'
 
 export interface SimGraph {
     id: number
@@ -22,7 +23,8 @@ export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 
 export enum VisualizerType {
     tooltip = 'tooltip',
-    spanningTree = 'spanningTree'
+    spanningTree = 'spanningTree',
+    vertexColouring = 'vertexColouring'
 }
 
 export const DEFAULT_CIRCLE_FILL_COLOR = 'white'
@@ -34,6 +36,7 @@ interface GraphSimulationProps {
     graphs: SimGraph[]
     visualizers: VisualizerType[]
     onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
+    onVisualizeVertexColouring: (graphId: number, rootVertex: string) => Map<string, number>
 }
 
 /**
@@ -41,7 +44,7 @@ interface GraphSimulationProps {
  *
  * Adapted from https://reactfordataviz.com/articles/force-directed-graphs-with-react-and-d3v7/
  */
-const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationProps): JSX.Element => {
+const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, ...props }: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
 
     useEffect(() => {
@@ -49,6 +52,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
 
         const vertices = props.graphs.flatMap(g => g.vertices)
         const edges = props.graphs.flatMap(g => g.edges)
+        console.log(vertices, edges)
 
         const simulation = d3.forceSimulation<SimVertex, SimEdge>()
             .nodes(vertices)
@@ -63,7 +67,13 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
         // TODO extract drawSimulatedGraph to useCallback (deps on visualizers etc.), then remove all deps here except props.graphs
         simulation.on('tick', () => {
             for (const graph of props.graphs) {
-                drawSimulatedGraph(graph, { colorCode: colorScale(graph.id), dragHandler: handleDrag(simulation), visualizers: props.visualizers, onVisualizeSpanningTree })
+                drawSimulatedGraph(graph, {
+                    colorCode: colorScale(graph.id),
+                    dragHandler: handleDrag(simulation),
+                    visualizers: props.visualizers,
+                    onVisualizeSpanningTree,
+                    onVisualizeVertexColouring
+                })
             }
         })
 
@@ -94,7 +104,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
         colorCode?: string
         dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
         visualizers: VisualizerType[]
-        onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
+        onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>,
+        onVisualizeVertexColouring: (graphId: number, rootVertex: string) => Map<string, number>,
     }): void {
         if (svgRef.current === null) return
 
@@ -134,10 +145,15 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
             })
             .call(options?.dragHandler ?? (() => { }))
             .call((sel) => {
+                // unregister event handlers
                 const handlers = Object.keys(VisualizerType).map(x => '.' + x).join(' ')
                 sel.on(handlers, null)
             })
 
+        // apply visualizers (from background to foreground)
+        if (options?.visualizers.includes(VisualizerType.vertexColouring) === true) {
+            vertices.call(VertexColouringVisualizer, graph, options.onVisualizeVertexColouring)
+        }
         if (options?.visualizers.includes(VisualizerType.spanningTree) === true) {
             vertices.call(SpanningTreeVisualizer, graph, edges, options.onVisualizeSpanningTree)
         }

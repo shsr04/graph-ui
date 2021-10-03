@@ -12,14 +12,14 @@ function App (): JSX.Element {
     // generateGraph(20, 0.2, 10, i => i.toString())
 
     const handleEditorInputGraphs = useCallback(input => {
-        setGraphDb({ ...graphDb, ...{ editor: input } })
+        setGraphDb(prev => ({ ...prev, ...{ editor: input } }))
     }, [])
 
     const handleRandomInputGraphs = useCallback(input => {
-        setGraphDb({ ...graphDb, ...{ random: input } })
+        setGraphDb(prev => ({ ...prev, ...{ random: input } }))
     }, [])
 
-    console.log(graphDb.random)
+    console.log(Object.values(graphDb))
 
     return (
         <div className="App">
