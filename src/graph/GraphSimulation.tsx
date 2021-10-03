@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import { Simulation } from 'd3'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
@@ -61,7 +62,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             .force('collision', d3.forceCollide(node => node.radius * 1.5))
             .force('links', d3.forceLink<SimVertex, SimEdge>().id(vertex => vertex.id).links(edges))
             .alpha(0.1)
-            .restart()
+            // hack: Somehow d3 completely kills the simulation when alpha < alphaMin, so we need to keep it running continuously...
+            .alphaTarget(0.01)
 
         setSimulation(simulation)
 
@@ -71,17 +73,18 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
     }, [props.graphs])
 
     // keeps stable reference to the drawSimulatedGraph function
-    const drawCallback = useCallback(drawSimulatedGraph, [onVisualizeSpanningTree, onVisualizeVertexColouring, props.visualizers])
+    const handleDraw = useCallback(drawSimulatedGraph, [props.visualizers, onVisualizeSpanningTree, onVisualizeVertexColouring])
 
     useEffect(() => {
         const colorScale = d3.scaleOrdinal(props.graphs.map(g => g.id), d3.schemeCategory10)
-        // TODO extract drawSimulatedGraph to useCallback (deps on visualizers etc.), then remove all deps here except props.graphs
         simulation.on('tick', () => {
+            console.log(simulation.alpha())
+            if (simulation.alpha() < simulation.alphaMin()) simulation.restart()
             for (const graph of props.graphs) {
-                drawCallback(graph, simulation, colorScale(graph.id))
+                handleDraw(graph, simulation, colorScale(graph.id))
             }
         })
-    }, [props.graphs, simulation, drawCallback])
+    }, [simulation, props.graphs, handleDraw])
 
     function drawSimulatedGraph (graph: SimGraph, simulation: d3.Simulation<SimVertex, SimEdge>, colorCode: string) {
         if (svgRef.current === null) return
@@ -177,6 +180,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         return d3.drag<SVGCircleElement, SimVertex>()
             .on('start', (event) => {
                 if (event.active > 0) return
+                // Restarts the simulation with higher alphaTarget.
                 simulation.alphaTarget(0.2).restart()
             })
             .on('drag', (event, vertex) => {
@@ -185,6 +189,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             })
             .on('end', (event, vertex) => {
                 if (event.active > 0) return
+                // TODO: investigate why the simulation freezes completely by default, but the drag handler somehow fixes it... Thanks d3
                 simulation.alphaTarget(0)
                 vertex.fx = null
                 vertex.fy = null
