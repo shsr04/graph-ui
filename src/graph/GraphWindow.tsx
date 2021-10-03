@@ -40,15 +40,15 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         else tooltip.push(`${graph.properties.colourability}-colourable`)
         if (graph.properties.isTree) tooltip.push('tree')
         else if (graph.properties.isAcyclic) tooltip.push('acyclic')
-        else if (graph.properties.isCycle) tooltip.push('cycle')
-        if (graph.properties.isEulerian) tooltip.push('eulerian')
-        else if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite')
+        if (graph.properties.isCycle) tooltip.push('cycle')
+        else if (graph.properties.isEulerian) tooltip.push('eulerian')
+        if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite')
         else if (graph.properties.isBipartite) tooltip.push('bipartite')
         else if (graph.properties.isComplete) tooltip.push('complete')
         if (graph.properties.isStar) tooltip.push('star')
         if (graph.properties.isWheel) tooltip.push('wheel')
         if (graph.properties.isGear) tooltip.push('gear')
-        const header = `${graph.directed ? 'digraph' : 'graph'} ${graph.name.toUpperCase()}\n`
+        const header = `${graph.directed ? 'digraph' : 'graph'} ${graph.name.toUpperCase()} (n=${graph.order()}, m=${graph.size()})\n`
         return header + tooltip.map(x => '- ' + x).join('\n')
     }
 

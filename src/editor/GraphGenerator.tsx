@@ -4,7 +4,7 @@ import { generateGraph } from '../algorithms/GraphGenerator'
 import './GraphGenerator.css'
 
 interface GraphGeneratorProps {
-    onGenerateGraph: (graph: Graph) => void
+    onGenerateGraphs: (graph: Graph[]) => void
 }
 
 const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
@@ -39,7 +39,11 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
 
     function handleSubmit (): void {
         const g = generateGraph(order, probability, 100, u => u.toString())
-        props.onGenerateGraph(g)
+        props.onGenerateGraphs([g])
+    }
+
+    function handleClear (): void {
+        props.onGenerateGraphs([])
     }
 
     return <>
@@ -62,6 +66,7 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
 
             <div>
                 <button disabled={orderError !== null || probabilityError !== null} onClick={handleSubmit}>OK</button>
+                <button onClick={handleClear}>Clear</button>
             </div>
         </div>
     </>

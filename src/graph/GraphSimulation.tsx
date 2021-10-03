@@ -60,7 +60,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
     const [simulation, setSimulation] = useState<d3.Simulation<SimVertex, SimEdge>>(d3.forceSimulation())
 
     useEffect(() => {
-        if (svgRef.current === null || props.graphs.length === 0) return
+        if (svgRef.current === null) return
 
         const vertices = props.graphs.flatMap(g => g.vertices)
         const edges = props.graphs.flatMap(g => g.edges)
@@ -87,10 +87,25 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
     const handleDraw = useCallback(drawSimulatedGraph, [props.visualizers, onVisualizeSpanningTree, onVisualizeVertexColouring])
 
     useEffect(() => {
+        // Clean up the SVG elements of old graphs
+        const graphIds = props.graphs.map(graph => graph.id)
+        d3.selectAll<SVGGElement, unknown>('g').nodes()
+            // Look for <g> elements like `nodes-N` or `links-N`
+            .filter(elem => {
+                try {
+                    const num = Number(elem.id.split('-')[1])
+                    if (!graphIds.includes(num)) {
+                        return true
+                    }
+                } catch (e: any) {}
+                return false
+            })
+            .forEach(elem => {
+                elem.remove()
+            })
+
         const colorScale = d3.scaleOrdinal(props.graphs.map(g => g.id), d3.schemeCategory10)
         simulation.on('tick', () => {
-            console.log(simulation.alpha())
-            if (simulation.alpha() < simulation.alphaMin()) simulation.restart()
             for (const graph of props.graphs) {
                 handleDraw(graph, simulation, colorScale(graph.id))
             }

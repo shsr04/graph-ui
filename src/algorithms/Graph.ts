@@ -73,4 +73,20 @@ export class Graph<IdType = string> {
             return this.edges().length / 2
         }
     }
+
+    public serialize (): any {
+        return {
+            id: this.id,
+            name: this.name,
+            directed: this.directed,
+            adjacencyLists: Array.from(this.adjMap)
+        }
+    }
+
+    public static fromJSON<T>(data: any): Graph<T> {
+        if (!(typeof data === 'object' && typeof data.id === 'number' && typeof data.name === 'string' && typeof data.directed === 'boolean' && typeof data.adjacencyLists === 'object')) {
+            throw Error('Invalid JSON graph data: ' + JSON.stringify(data))
+        }
+        return new Graph<T>(data.id, data.name, data.directed, new Map(data.adjacencyLists))
+    }
 }

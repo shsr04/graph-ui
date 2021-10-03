@@ -23,6 +23,10 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
     const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
     useEffect(() => {
+        if (text.trim().length === 0) {
+            setParseResult([])
+            return
+        }
         try {
             setParseResult(parseDot(text))
             setParseError(undefined)
