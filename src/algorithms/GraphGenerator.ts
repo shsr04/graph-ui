@@ -1,6 +1,6 @@
-import { Graph } from "./Graph";
+import { Graph } from './Graph'
 
-export function generateGraph<T>(n: number, p: number, graphId: number, vertexIdGenerator: (i: number) => T): Graph<T> {
+export function generateGraph<T> (n: number, p: number, graphId: number, vertexIdGenerator: (i: number) => T): Graph<T> {
     const directed = false
 
     let adjMap = new Map<T, T[]>(Array.from(Array(n).keys()).map(i => [vertexIdGenerator(i), []]))
@@ -22,10 +22,10 @@ export function generateGraph<T>(n: number, p: number, graphId: number, vertexId
             Array.from(adjMap.entries())
                 .map(([u, adjList]) => ([
                     u,
-                    Array.from(new Set(adjList.filter(v => u !== v))),
+                    Array.from(new Set(adjList.filter(v => u !== v)))
                 ]))
         )
     }
 
-    return new Graph(graphId, graphId.toString(), directed, adjMap)
+    return new Graph(graphId, 'random', directed, adjMap)
 }

@@ -164,18 +164,18 @@ const GraphSimulation = ({ onVisualizeSpanningTree, ...props }: GraphSimulationP
          * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
          */
         function intersectionWithCircle (source: SimVertex, target: SimVertex, respectArrow: boolean = false): { x: number, y: number } {
-            if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) throw Error("INTERNAL ERROR: source/target is undefined")
-            if (source === target) return {x: source.x, y: source.y}
+            if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) throw Error('INTERNAL ERROR: source/target is undefined')
+            if (source === target) return { x: source.x, y: source.y }
             const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
             let distanceBorder = distanceCenter - target.radius
             if (respectArrow) distanceBorder -= arrowTipSize / 2
             const ratio = distanceBorder / distanceCenter
             const deltaX = (target.x - source.x) * ratio
             const deltaY = (target.y - source.y) * ratio
-            if (Number.isNaN(source.x)) console.log(source,target)
-            if (Number.isNaN(deltaX)) console.log(source,target)
-            if (Number.isNaN(source.y)) console.log(source,target)
-            if (Number.isNaN(deltaY)) console.log(source,target)
+            if (Number.isNaN(source.x)) console.log(source, target)
+            if (Number.isNaN(deltaX)) console.log(source, target)
+            if (Number.isNaN(source.y)) console.log(source, target)
+            if (Number.isNaN(deltaY)) console.log(source, target)
             return { x: source.x + deltaX, y: source.y + deltaY }
         }
     }

@@ -8,3 +8,18 @@
   justify-items: center;
   align-items: center;
 }
+
+#left-side {
+  width: 90%;
+  height: 90%;
+  display: grid;
+  grid-template-rows: 9fr 1fr;
+  row-gap: 1%;
+}
+
+#right-side {
+  width: 90%;
+  height: 90%;
+  display: grid;
+  grid-template-rows: 10fr;
+}

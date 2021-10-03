@@ -2,24 +2,34 @@ import { useCallback, useState } from 'react'
 import { Graph } from './algorithms/Graph'
 import './App.css'
 import EditorWindow from './editor/EditorWindow'
+import GraphGenerator from './editor/GraphGenerator'
 import GraphWindow from './graph/GraphWindow'
 
-type GraphDatabase = { editor: Graph[], random: Graph[] }
+interface GraphDatabase { editor: Graph[], random: Graph[] }
 
-function App(): JSX.Element {
+function App (): JSX.Element {
     const [graphDb, setGraphDb] = useState<GraphDatabase>({ editor: [], random: [] })
-    //generateGraph(20, 0.2, 10, i => i.toString())
+    // generateGraph(20, 0.2, 10, i => i.toString())
 
     const handleEditorInputGraphs = useCallback(input => {
-        setGraphDb({...graphDb, ...{ editor: input}})
+        setGraphDb({ ...graphDb, ...{ editor: input } })
+    }, [])
+
+    const handleRandomInputGraphs = useCallback(input => {
+        setGraphDb({ ...graphDb, ...{ random: input } })
     }, [])
 
     console.log(graphDb.random)
 
     return (
         <div className="App">
-            <EditorWindow onInputGraphs={handleEditorInputGraphs} />
-            <GraphWindow graphs={Object.values(graphDb).flat()} />
+            <div id="left-side">
+                <EditorWindow onInputGraphs={handleEditorInputGraphs} />
+                <GraphGenerator onGenerateGraph={handleRandomInputGraphs} />
+            </div>
+            <div id="right-side">
+                <GraphWindow graphs={Object.values(graphDb).flat()} />
+            </div>
         </div>
     )
 }

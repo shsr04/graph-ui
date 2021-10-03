@@ -3,7 +3,7 @@ import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { mapToGraph } from './GraphMapper'
 import { Graph } from '../algorithms/Graph'
-import {generateGraph} from '../algorithms/GraphGenerator'
+import { generateGraph } from '../algorithms/GraphGenerator'
 import './EditorWindow.css'
 
 interface DotParserSyntaxError extends Error {
@@ -56,10 +56,11 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
     return (
         <>
             <div id="editor-wrapper">
+                <label className="full-width">
+                    Enter graph specification here. Supports a subset of <a href="https://www.graphviz.org/doc/info/lang.html">DOT syntax</a>. (Subgraphs, attributes and ports are not supported.)
+                </label>
                 <div id="line-numbers">{lineNumbers}</div>
-
                 <textarea placeholder="Enter graph specification..."
-                    id="text-input"
                     cols={80} rows={48} autoComplete="off" tabIndex={-1}
                     ref={textAreaRef}
                     value={text}
@@ -70,11 +71,9 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
                     }}
                 ></textarea>
 
-                <div style={{
-                    gridColumn: '1 / span 2'
-                }}>
-                    <pre style={{ whiteSpace: 'pre-wrap' }}>{parseError !== undefined ? parseError.message : ''}</pre>
-                </div>
+                {parseError !== undefined && <div className="full-width">
+                    <pre style={{ whiteSpace: 'pre-wrap' }}>{parseError.message}</pre>
+                </div>}
             </div>
         </>
     )

@@ -29,7 +29,7 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
         // map edge lists to pairs
         .flatMap(e => d3.pairs(e))
 
-    let adj = new Map<string,string[]>()
+    let adj = new Map<string, string[]>()
 
     // add predefined vertices
     for (const vertex of vertices) {

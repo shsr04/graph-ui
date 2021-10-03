@@ -1,6 +1,5 @@
 #graph-wrapper {
-    width: 90%;
-    height: 90%;
     display: grid;
     grid-template-rows: 600px auto;
+    align-items: center;
 }

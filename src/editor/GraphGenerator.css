@@ -1,0 +1,23 @@
+input.invalid {
+    border: 1px solid red;
+}
+
+.errorText {
+    font-weight: bold
+}
+
+#generator-wrapper {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    column-gap: 1em;
+}
+
+#generator-wrapper div {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+}
+
+#generator-wrapper .errorText {
+    font-weight: bold;
+    grid-column: 1 / span 2;
+}
