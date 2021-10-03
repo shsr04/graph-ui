@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 import { VertexColouringVisualizer } from './visualizers/VertexColouringVisualizer'
@@ -46,13 +46,13 @@ interface GraphSimulationProps {
  */
 const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, ...props }: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
+    const [simulation, setSimulation] = useState<d3.Simulation<SimVertex, SimEdge>>(d3.forceSimulation())
 
     useEffect(() => {
         if (svgRef.current === null || props.graphs.length === 0) return
 
         const vertices = props.graphs.flatMap(g => g.vertices)
         const edges = props.graphs.flatMap(g => g.edges)
-        console.log(vertices, edges)
 
         const simulation = d3.forceSimulation<SimVertex, SimEdge>()
             .nodes(vertices)
@@ -63,50 +63,27 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             .alpha(0.1)
             .restart()
 
-        const colorScale = d3.scaleOrdinal(props.graphs.map(g => g.id), d3.schemeCategory10)
-        // TODO extract drawSimulatedGraph to useCallback (deps on visualizers etc.), then remove all deps here except props.graphs
-        simulation.on('tick', () => {
-            for (const graph of props.graphs) {
-                drawSimulatedGraph(graph, {
-                    colorCode: colorScale(graph.id),
-                    dragHandler: handleDrag(simulation),
-                    visualizers: props.visualizers,
-                    onVisualizeSpanningTree,
-                    onVisualizeVertexColouring
-                })
-            }
-        })
-
-        function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
-            return d3.drag<SVGCircleElement, SimVertex>()
-                .on('start', (event) => {
-                    if (event.active > 0) return
-                    simulation.alphaTarget(0.2).restart()
-                })
-                .on('drag', (event, vertex) => {
-                    vertex.fx = event.x
-                    vertex.fy = event.y
-                })
-                .on('end', (event, vertex) => {
-                    if (event.active > 0) return
-                    simulation.alphaTarget(0)
-                    vertex.fx = null
-                    vertex.fy = null
-                })
-        }
+        setSimulation(simulation)
 
         return () => {
             simulation.stop()
         }
-    }, [props.graphs, props.visualizers, onVisualizeSpanningTree])
+    }, [props.graphs])
 
-    function drawSimulatedGraph (graph: SimGraph, options?: {
-        colorCode?: string
-        dragHandler?: d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition>
-        visualizers: VisualizerType[]
-        onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>,
-        onVisualizeVertexColouring: (graphId: number, rootVertex: string) => Map<string, number>,
-    }): void {
+    // keeps stable reference to the drawSimulatedGraph function
+    const drawCallback = useCallback(drawSimulatedGraph, [onVisualizeSpanningTree, onVisualizeVertexColouring, props.visualizers])
+
+    useEffect(() => {
+        const colorScale = d3.scaleOrdinal(props.graphs.map(g => g.id), d3.schemeCategory10)
+        // TODO extract drawSimulatedGraph to useCallback (deps on visualizers etc.), then remove all deps here except props.graphs
+        simulation.on('tick', () => {
+            for (const graph of props.graphs) {
+                drawCallback(graph, simulation, colorScale(graph.id))
+            }
+        })
+    }, [props.graphs, simulation, drawCallback])
+
+    function drawSimulatedGraph (graph: SimGraph, simulation: d3.Simulation<SimVertex, SimEdge>, colorCode: string) {
         if (svgRef.current === null) return
 
         const svg = d3.select(svgRef.current)
@@ -139,11 +116,11 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             .attr('cx', u => u.x ?? null)
             .attr('cy', u => u.y ?? null)
             .attr('r', u => u.radius)
-            .attr('stroke', options?.colorCode ?? 'black')
+            .attr('stroke', colorCode)
             .attr('fill', function () {
                 return this.getAttribute('fill') ?? DEFAULT_CIRCLE_FILL_COLOR
             })
-            .call(options?.dragHandler ?? (() => { }))
+            .call(handleDrag(simulation))
             .call((sel) => {
                 // unregister event handlers
                 const handlers = Object.keys(VisualizerType).map(x => '.' + x).join(' ')
@@ -151,13 +128,13 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             })
 
         // apply visualizers (from background to foreground)
-        if (options?.visualizers.includes(VisualizerType.vertexColouring) === true) {
-            vertices.call(VertexColouringVisualizer, graph, options.onVisualizeVertexColouring)
+        if (props.visualizers.includes(VisualizerType.vertexColouring)) {
+            vertices.call(VertexColouringVisualizer, graph, onVisualizeVertexColouring)
         }
-        if (options?.visualizers.includes(VisualizerType.spanningTree) === true) {
-            vertices.call(SpanningTreeVisualizer, graph, edges, options.onVisualizeSpanningTree)
+        if (props.visualizers.includes(VisualizerType.spanningTree)) {
+            vertices.call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
         }
-        if (options?.visualizers.includes(VisualizerType.tooltip) === true) {
+        if (props.visualizers.includes(VisualizerType.tooltip)) {
             vertices.call(TooltipVisualizer, svg, graph)
         }
 
@@ -172,28 +149,46 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             .attr('font-size', u => u.radius)
             .attr('fill', 'black')
             .style('pointer-events', 'none')
+    }
 
-        /**
-         * @param source Source vertex
-         * @param target Target vertex
-         * @param respectArrow True if the distance should consider additional space for an arrow tip (used in digraphs)
-         * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
-         */
-        function intersectionWithCircle (source: SimVertex, target: SimVertex, respectArrow: boolean = false): { x: number, y: number } {
-            if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) throw Error('INTERNAL ERROR: source/target is undefined')
-            if (source === target) return { x: source.x, y: source.y }
-            const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
-            let distanceBorder = distanceCenter - target.radius
-            if (respectArrow) distanceBorder -= arrowTipSize / 2
-            const ratio = distanceBorder / distanceCenter
-            const deltaX = (target.x - source.x) * ratio
-            const deltaY = (target.y - source.y) * ratio
-            if (Number.isNaN(source.x)) console.log(source, target)
-            if (Number.isNaN(deltaX)) console.log(source, target)
-            if (Number.isNaN(source.y)) console.log(source, target)
-            if (Number.isNaN(deltaY)) console.log(source, target)
-            return { x: source.x + deltaX, y: source.y + deltaY }
-        }
+    /**
+     * @param source Source vertex
+     * @param target Target vertex
+     * @param respectArrow True if the distance should consider additional space for an arrow tip (used in digraphs)
+     * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
+     */
+    function intersectionWithCircle (source: SimVertex, target: SimVertex, respectArrow: boolean = false): { x: number, y: number } {
+        if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) throw Error('INTERNAL ERROR: source/target is undefined')
+        if (source === target) return { x: source.x, y: source.y }
+        const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
+        let distanceBorder = distanceCenter - target.radius
+        if (respectArrow) distanceBorder -= arrowTipSize / 2
+        const ratio = distanceBorder / distanceCenter
+        const deltaX = (target.x - source.x) * ratio
+        const deltaY = (target.y - source.y) * ratio
+        if (Number.isNaN(source.x)) console.log(source, target)
+        if (Number.isNaN(deltaX)) console.log(source, target)
+        if (Number.isNaN(source.y)) console.log(source, target)
+        if (Number.isNaN(deltaY)) console.log(source, target)
+        return { x: source.x + deltaX, y: source.y + deltaY }
+    }
+
+    function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
+        return d3.drag<SVGCircleElement, SimVertex>()
+            .on('start', (event) => {
+                if (event.active > 0) return
+                simulation.alphaTarget(0.2).restart()
+            })
+            .on('drag', (event, vertex) => {
+                vertex.fx = event.x
+                vertex.fy = event.y
+            })
+            .on('end', (event, vertex) => {
+                if (event.active > 0) return
+                simulation.alphaTarget(0)
+                vertex.fx = null
+                vertex.fy = null
+            })
     }
 
     const svgBoundingRect = svgRef.current !== null

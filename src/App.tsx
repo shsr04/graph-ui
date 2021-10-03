@@ -19,8 +19,6 @@ function App (): JSX.Element {
         setGraphDb(prev => ({ ...prev, ...{ random: input } }))
     }, [])
 
-    console.log(Object.values(graphDb))
-
     return (
         <div className="App">
             <div id="left-side">
