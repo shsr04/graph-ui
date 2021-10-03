@@ -1,5 +1,4 @@
 import * as d3 from 'd3'
-import { Simulation } from 'd3'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
@@ -38,7 +37,7 @@ export const BOLD_LINE_STROKE_WIDTH = 5
  * If the simulation goes lower than the min value, the simulation is stopped immediately.
  * (Theoretically, the simulation can be restarted, but this is pretty broken right now.)
  */
- const SIMULATION_ALPHA_SETTINGS = {
+const SIMULATION_ALPHA_SETTINGS = {
     base: 0.5,
     target: 1e-10,
     min: 0
@@ -98,7 +97,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         })
     }, [simulation, props.graphs, handleDraw])
 
-    function drawSimulatedGraph (graph: SimGraph, simulation: d3.Simulation<SimVertex, SimEdge>, colorCode: string) {
+    function drawSimulatedGraph (graph: SimGraph, simulation: d3.Simulation<SimVertex, SimEdge>, colorCode: string): void {
         if (svgRef.current === null) return
 
         const svg = d3.select(svgRef.current)

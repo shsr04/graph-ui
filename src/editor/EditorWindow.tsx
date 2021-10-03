@@ -1,10 +1,9 @@
 import * as d3 from 'd3'
 import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { mapToGraph } from './GraphMapper'
 import { Graph } from '../algorithms/Graph'
-import { generateGraph } from '../algorithms/GraphGenerator'
 import './EditorWindow.css'
+import { mapToGraph } from './GraphMapper'
 
 interface DotParserSyntaxError extends Error {
     message: string

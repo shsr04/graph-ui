@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import './GraphGenerator.css'
+import { useState } from 'react'
 import { Graph } from '../algorithms/Graph'
 import { generateGraph } from '../algorithms/GraphGenerator'
+import './GraphGenerator.css'
 
 interface GraphGeneratorProps {
     onGenerateGraph: (graph: Graph) => void
@@ -50,14 +50,14 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
 
             <div>
                 <label>n</label>
-                <input type="text" value={orderInput} onChange={e => handleChangeOrder(e.target.value)} className={orderError ? 'invalid' : ''} />
-                {orderError && <span className="errorText">{orderError}</span>}
+                <input type="text" value={orderInput} onChange={e => handleChangeOrder(e.target.value)} className={orderError !== null ? 'invalid' : ''} />
+                {orderError !== null && <span className="errorText">{orderError}</span>}
             </div>
 
             <div>
                 <label>p</label>
-                <input type="text" value={probabilityInput} onChange={e => handleChangeProbability(e.target.value)} className={probabilityError ? 'invalid' : ''} />
-                {probabilityError && <span className="errorText">{probabilityError}</span>}
+                <input type="text" value={probabilityInput} onChange={e => handleChangeProbability(e.target.value)} className={probabilityError !== null ? 'invalid' : ''} />
+                {probabilityError !== null && <span className="errorText">{probabilityError}</span>}
             </div>
 
             <div>

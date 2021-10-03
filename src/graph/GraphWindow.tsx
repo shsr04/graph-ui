@@ -36,7 +36,8 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         const tooltip = []
         if (graph.properties.isConnected) tooltip.push('connected')
         else tooltip.push('disconnected')
-        tooltip.push(`${graph.properties.colourability}-colourable`)
+        if (graph.properties.chromaticity !== null) tooltip.push(`${graph.properties.chromaticity}-chromatic`)
+        else tooltip.push(`${graph.properties.colourability}-colourable`)
         if (graph.properties.isTree) tooltip.push('tree')
         else if (graph.properties.isAcyclic) tooltip.push('acyclic')
         else if (graph.properties.isCycle) tooltip.push('cycle')

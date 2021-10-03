@@ -64,7 +64,37 @@ export interface GraphProperties {
      */
     isGear: boolean
 
+    /**
+     * A graph is k-colourable if admits a k-colouring: a vertex colouring with at most k colours.
+     * A vertex colouring of a graph with k colours is a mapping c: V -> {c1,c2,...,ck} such that c(u) != c(v) for all adjacent vertices u,v in V.
+     *
+     * Note: The k-colouring obtained this way is not necessarily the smallest possible colouring of the vertices.
+     * There are some graph classes which are easily coloured:
+     * - Every planar graph is 4-colourable. (Four Colours Theorem)
+     * - Every planar graph not containing a triangle is 3-colourable.
+     */
     colourability: number
+
+    /**
+     * A graph is k-chromatic if its vertices can be coloured with no less than k colours.
+     *
+     * Finding this smallest colouring ("chromatic number") can be an NP-hard problem depending on the graph.
+     * However, there are some graph classes which are easily coloured:
+     * - Every bipartite graph is 2-chromatic. (see Proposition below)
+     *
+     * Proposition: Every bipartite graph is 2-chromatic.
+     * Proof: We begin with the complete bipartite graph G2 = K[1,1] = ({u,v}, {{u,v}}).
+     * We set c(u) = c1 and c(v) = c2. Thus, G2 is 2-chromatic.
+     * (It is easy to see that the graph G2' = ({u,v},{}) is bipartite and 1-chromatic. Thus, we can use G2 without loss of generality.)
+     * Given a bipartite 2-chromatic graph Gi=(Vi,Ei), we now construct the graph G[i+1].
+     * Assume that the vertices in Vi are partitioned into Pi,Qi. Assume that c(p) = c1 for all p in Pi and c(q) = c2 for all q in Qi.
+     * If we were to insert a vertex v into Gi such that it is adjacent to vertices in both Pi and Qi, G[i+1] would not be bipartite.
+     * So we insert a vertex u into Gi such that u is adjacent to zero or more vertices in Pi and to none of the vertices in Qi. (Obviously, the construction also works vice versa.)
+     * This results in G[i+1]=(V[i+1],E[i+1]), P[i+1] = Pi, Q[i+1] = Qi + u.
+     * Due to our construction described above, G[i+1] is bipartite. All vertices in G[i+1] except u are already coloured, so we set c(u) = c2.
+     * As a result, G[i+1] is 2-chromatic and bipartite. [END]
+     */
+    chromaticity: number | null
 
     /**
      * TODO:
@@ -164,7 +194,12 @@ function colourability<T> (g: Graph<T>): number {
     return new Set(colouring.values()).size
 }
 
+function chromaticity<T> (g: Graph<T>): number|null {
+    if (isBipartite(g) || isCompleteBipartite(g)) return 2
+    return null
+}
+
 export function getProperties<T> (g: Graph<T>): GraphProperties {
-    const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear, colourability]).map(f => ({ [f.name]: f(g) }))
+    const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear, colourability, chromaticity]).map(f => ({ [f.name]: f(g) }))
     return Object.assign({}, ...results)
 }
