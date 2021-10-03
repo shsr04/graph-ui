@@ -33,18 +33,22 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
     }
 
     function getTooltip (graph: Graph): string {
-        const tooltip = [`name = '${graph.name}'`, `connected = ${String(graph.properties.isConnected)}`]
-        if (graph.properties.isTree) tooltip.push('tree = true')
-        else if (graph.properties.isAcyclic) tooltip.push('acyclic = true')
-        else if (graph.properties.isCycle) tooltip.push('cycle = true')
-        if (graph.properties.isEulerian) tooltip.push('eulerian = true')
-        else if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite = true')
-        else if (graph.properties.isBipartite) tooltip.push('bipartite = true')
-        else if (graph.properties.isComplete) tooltip.push('complete = true')
-        if (graph.properties.isStar) tooltip.push('star = true')
-        if (graph.properties.isWheel) tooltip.push('wheel = true')
-        if (graph.properties.isGear) tooltip.push('gear = true')
-        return tooltip.join('\n')
+        const tooltip = []
+        if (graph.properties.isConnected) tooltip.push('connected')
+        else tooltip.push('disconnected')
+        tooltip.push(`${graph.properties.colourability}-colourable`)
+        if (graph.properties.isTree) tooltip.push('tree')
+        else if (graph.properties.isAcyclic) tooltip.push('acyclic')
+        else if (graph.properties.isCycle) tooltip.push('cycle')
+        if (graph.properties.isEulerian) tooltip.push('eulerian')
+        else if (graph.properties.isCompleteBipartite) tooltip.push('complete bipartite')
+        else if (graph.properties.isBipartite) tooltip.push('bipartite')
+        else if (graph.properties.isComplete) tooltip.push('complete')
+        if (graph.properties.isStar) tooltip.push('star')
+        if (graph.properties.isWheel) tooltip.push('wheel')
+        if (graph.properties.isGear) tooltip.push('gear')
+        const header = `${graph.directed ? 'digraph' : 'graph'} ${graph.name.toUpperCase()}\n`
+        return header + tooltip.map(x => '- ' + x).join('\n')
     }
 
     const handleVisualizeSpanningTree = useCallback((graphId: number, rootVertex: string): Array<[string, string]> => {

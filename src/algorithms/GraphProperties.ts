@@ -1,6 +1,7 @@
 import { dfs } from './Dfs'
 import { Graph } from './Graph'
 import { decomposeBipartite } from './Partition'
+import { colourVertices } from './VertexColouring'
 
 export interface GraphProperties {
     /**
@@ -63,11 +64,15 @@ export interface GraphProperties {
      */
     isGear: boolean
 
+    colourability: number
+
     /**
      * TODO:
-     * - graceful graph (Gallian, 2018) (https://mathworld.wolfram.com/GracefulGraph.html)
-     * - planar graph
-     * - platonic graphs
+     * - colourable?
+     * - biconnected
+     * - planar
+     * - graceful (Gallian, 2018) (https://mathworld.wolfram.com/GracefulGraph.html)
+     * - platonic
      */
 }
 
@@ -154,7 +159,12 @@ function isGear<T> (g: Graph<T>): boolean {
     return isBipartite(g) && Array.from(Array(10).keys()).some(n => g.order() === 2 * n + 1 && g.size() === 3 * n)
 }
 
+function colourability<T> (g: Graph<T>): number {
+    const colouring = colourVertices(g)
+    return new Set(colouring.values()).size
+}
+
 export function getProperties<T> (g: Graph<T>): GraphProperties {
-    const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear]).map(f => ({ [f.name]: f(g) }))
+    const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear, colourability]).map(f => ({ [f.name]: f(g) }))
     return Object.assign({}, ...results)
 }

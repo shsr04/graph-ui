@@ -33,6 +33,17 @@ export const FOCUSED_CIRCLE_FILL_COLOR = 'orangered'
 export const DEFAULT_LINE_STROKE_WIDTH = 1
 export const BOLD_LINE_STROKE_WIDTH = 5
 
+/**
+ * The simulation starts from the base value and converges to the target value.
+ * If the simulation goes lower than the min value, the simulation is stopped immediately.
+ * (Theoretically, the simulation can be restarted, but this is pretty broken right now.)
+ */
+ const SIMULATION_ALPHA_SETTINGS = {
+    base: 0.5,
+    target: 1e-10,
+    min: 0
+}
+
 interface GraphSimulationProps {
     graphs: SimGraph[]
     visualizers: VisualizerType[]
@@ -61,9 +72,10 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             .force('charge', d3.forceManyBody().strength(-100))
             .force('collision', d3.forceCollide(node => node.radius * 1.5))
             .force('links', d3.forceLink<SimVertex, SimEdge>().id(vertex => vertex.id).links(edges))
-            .alpha(0.1)
             // hack: Somehow d3 completely kills the simulation when alpha < alphaMin, so we need to keep it running continuously...
-            .alphaTarget(0.01)
+            .alpha(SIMULATION_ALPHA_SETTINGS.base)
+            .alphaTarget(SIMULATION_ALPHA_SETTINGS.target)
+            .alphaMin(SIMULATION_ALPHA_SETTINGS.min)
 
         setSimulation(simulation)
 
@@ -180,8 +192,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         return d3.drag<SVGCircleElement, SimVertex>()
             .on('start', (event) => {
                 if (event.active > 0) return
-                // Restarts the simulation with higher alphaTarget.
-                simulation.alphaTarget(0.2).restart()
+                // Set up some dynamic behaviour
+                simulation.alpha(0.21).alphaTarget(0.2).restart()
             })
             .on('drag', (event, vertex) => {
                 vertex.fx = event.x
@@ -189,8 +201,9 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             })
             .on('end', (event, vertex) => {
                 if (event.active > 0) return
-                // TODO: investigate why the simulation freezes completely by default, but the drag handler somehow fixes it... Thanks d3
-                simulation.alphaTarget(0)
+                simulation
+                    // Reset to default alpha target
+                    .alphaTarget(SIMULATION_ALPHA_SETTINGS.target)
                 vertex.fx = null
                 vertex.fy = null
             })
