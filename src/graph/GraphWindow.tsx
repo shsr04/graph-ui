@@ -18,12 +18,12 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         [VisualizerType.vertexColouring]: false
     })
 
-    function getSimVertices(graph: Graph): SimVertex[] {
+    function getSimVertices (graph: Graph): SimVertex[] {
         return graph.vertices().map(id => ({ id, graphId: graph.id, radius: 20 }))
     }
 
-    function getSimEdges(graph: Graph, vertices: SimVertex[]): SimEdge[] {
-        function getVertex(vertices: SimVertex[], id: string): SimVertex {
+    function getSimEdges (graph: Graph, vertices: SimVertex[]): SimEdge[] {
+        function getVertex (vertices: SimVertex[], id: string): SimVertex {
             const result = vertices.find(x => x.id === id)
             if (result === undefined) {
                 throw Error(`INTERNAL ERROR: Vertex ${id} not found`)
@@ -33,10 +33,10 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return graph.vertices().flatMap(u => graph.neighbours(u).map(v => ({ source: getVertex(vertices, u), target: getVertex(vertices, v) })))
     }
 
-    function getTooltip(graph: Graph): string {
+    function getTooltip (graph: Graph): string {
         const tooltip = []
-        tooltip.push(`biconnected = ${graph.properties.isBiconnected}`)
-        if (graph.properties.isConnected) tooltip.push('connected')
+        if (graph.properties.isBiconnected) tooltip.push('biconnected')
+        else if (graph.properties.isConnected) tooltip.push('connected')
         else tooltip.push('disconnected')
         if (graph.properties.chromaticity !== null) tooltip.push(`${graph.properties.chromaticity}-chromatic`)
         else tooltip.push(`${graph.properties.colourability}-colourable`)
@@ -72,7 +72,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return colourVertices(g, rootVertex)
     }, [props.graphs])
 
-    function handleChangeVisualizer(event: ChangeEvent<HTMLInputElement>): void {
+    function handleChangeVisualizer (event: ChangeEvent<HTMLInputElement>): void {
         const visualizer = VisualizerType[event.target.value as keyof typeof VisualizerType]
         setSelectedVisualizer(prev => ({ ...prev, [visualizer]: event.target.checked }))
     }
@@ -115,7 +115,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                     if (props.graphs.length === 0) return
                     findBiconnectedComponents(props.graphs[0])
                 }
-            }></button>
+            }>BCC</button>
         </div>
     </>
 }

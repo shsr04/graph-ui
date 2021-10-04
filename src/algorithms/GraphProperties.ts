@@ -203,7 +203,7 @@ function chromaticity<T> (g: Graph<T>): number|null {
 }
 
 function isBiconnected<T> (g: Graph<T>): boolean {
-    return findBiconnectedComponents(g).length > 0
+    return findBiconnectedComponents(g).length === 1
 }
 
 export function getProperties<T> (g: Graph<T>): GraphProperties {
@@ -211,7 +211,7 @@ export function getProperties<T> (g: Graph<T>): GraphProperties {
         chromaticity: chromaticity(g),
         colourability: colourability(g),
         isAcyclic: isAcyclic(g),
-        isBiconnected: false,
+        isBiconnected: isBiconnected(g),
         isBipartite: isBipartite(g),
         isComplete: isComplete(g),
         isCompleteBipartite: isCompleteBipartite(g),
