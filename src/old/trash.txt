@@ -60,3 +60,7 @@
 //     .on('mouseleave', () => {
 //         svg.select('#tooltip').remove()
 //     })
+
+// EVIL! this causes bugs in the statically built app because the `f.name`s are obfuscated and minified!
+//  const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear, colourability, chromaticity]).map(f => ({ [f.name]: f(g) }))
+//  const return Object.assign({}, ...results)

@@ -200,6 +200,19 @@ function chromaticity<T> (g: Graph<T>): number|null {
 }
 
 export function getProperties<T> (g: Graph<T>): GraphProperties {
-    const results = Array.from([isConnected, isAcyclic, isTree, isCycle, isBipartite, isComplete, isCompleteBipartite, isStar, isEulerian, isWheel, isGear, colourability, chromaticity]).map(f => ({ [f.name]: f(g) }))
-    return Object.assign({}, ...results)
+    return {
+        chromaticity: chromaticity(g),
+        colourability: colourability(g),
+        isAcyclic: isAcyclic(g),
+        isBipartite: isBipartite(g),
+        isComplete: isComplete(g),
+        isCompleteBipartite: isCompleteBipartite(g),
+        isConnected: isConnected(g),
+        isCycle: isCycle(g),
+        isEulerian: isEulerian(g),
+        isGear: isGear(g),
+        isStar: isStar(g),
+        isTree: isTree(g),
+        isWheel: isWheel(g)
+    }
 }
