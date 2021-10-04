@@ -2,12 +2,15 @@ import { dfs } from './Dfs'
 import { Graph } from './Graph'
 import { decomposeBipartite } from './Partition'
 import { colourVertices } from './VertexColouring'
+import { findBiconnectedComponents } from './BiconnectedComponents'
 
 export interface GraphProperties {
     /**
      * A graph is connected if any two vertices are linked by a path.
      */
     isConnected: boolean
+
+    isBiconnected: boolean
 
     /**
      * A graph is acyclic if it contains no cycles. Such a graph is also called a forest. A cycle is a path P=(x1,x2,...,xk,x1) where k >= 3 and x[...] are distinct vertices of the graph.
@@ -199,11 +202,16 @@ function chromaticity<T> (g: Graph<T>): number|null {
     return null
 }
 
+function isBiconnected<T> (g: Graph<T>): boolean {
+    return findBiconnectedComponents(g).length > 0
+}
+
 export function getProperties<T> (g: Graph<T>): GraphProperties {
     return {
         chromaticity: chromaticity(g),
         colourability: colourability(g),
         isAcyclic: isAcyclic(g),
+        isBiconnected: false,
         isBipartite: isBipartite(g),
         isComplete: isComplete(g),
         isCompleteBipartite: isCompleteBipartite(g),

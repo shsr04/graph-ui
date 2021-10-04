@@ -49,7 +49,7 @@ export class Graph<IdType = string> {
     }
 
     public vertices (): IdType[] {
-        return d3.map(this.adjMap.keys(), x => x)
+        return Array.from(this.adjMap.keys())
     }
 
     public order (): number {

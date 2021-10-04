@@ -36,7 +36,7 @@ export function visitDfs<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predeces
         const c = colour.get(v)
         if (c === undefined) throw Error(`INTERNAL ERROR: vertex ${JSON.stringify(v)} has no colour`)
         f?.preexplore?.(u, k, c)
-        if (colour.get(v) === 'white') {
+        if (c === 'white') {
             predecessor.set(v, u)
             visitDfs(g, v, colour, predecessor, f)
         }
