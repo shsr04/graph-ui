@@ -1,5 +1,4 @@
 import { getProperties, GraphProperties } from './GraphProperties'
-import * as d3 from 'd3'
 
 /**
  * A graph is a pair G=(V,E) such that E = {{u,v} : u,v in V; u != v}.

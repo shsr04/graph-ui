@@ -1,10 +1,16 @@
-import { Colour, dfs, visitDfs } from './Dfs'
 import { Graph } from './Graph'
 
 /**
+ * Extracts the biconnected components from the given graph. #
+ * A component is biconnected if there is more than one path between every two vertices u,v in the graph with u != v.
+ * Conversely, a vertex w separates two vertices u,w if all paths from u to v contain w. Such a vertex w is called a cutvertex.
+ * When a cutvertex is deleted from a graph, the graph is separated into multiple components.
+ * @param g Input graph
+ * @param root Root vertex (optional). If defined, the function only considers the component containing the the root vertex.
+ * @returns 1) The set of cutvertices in the graph
+ * 2) The maximally biconnected subgraphs of the graph
  *
- * @param g
- * @returns
+ * If the input graph is biconnected, the set of cutvertices is empty and there is exactly one maximally biconnected subgraph.
  *
  * Test graph:
     graph {
@@ -14,21 +20,35 @@ import { Graph } from './Graph'
         4--2 5--1 6--1 9--7
     }
  */
-export function findBiconnectedComponents<T> (g: Graph<T>): Array<Array<[T, T]>> {
+export function findBiconnectedComponents<T> (g: Graph<T>, root?: T): [Set<T>, Array<Map<T, T[]>>] {
     const discovery = new Map<T, number>()
     const discoveryIndex = 0
     const lowpt = new Map<T, number>()
     const edges: Array<[T, T]> = []
     const components: Array<Array<[T, T]>> = []
 
-    for (const root of g.vertices()) {
-        if (discovery.has(root)) continue
-        visitBiconnect(g, root, null, discovery, discoveryIndex, lowpt, edges, components)
+    const vertices = root === undefined ? g.vertices() : [root]
+    for (const u of vertices) {
+        if (discovery.has(u)) continue
+        visitBiconnect(g, u, null, discovery, discoveryIndex, lowpt, edges, components)
     }
 
-    console.log(components)
-    // TODO transform to subgraphs
-    return components
+    // Asseemble biconnected subgraphs
+    const subgraphs: Array<Map<T, T[]>> = []
+    for (const component of components) {
+        const adjMap = new Map<T, T[]>()
+        // Insert adjacencies into the subgraph
+        for (const [u, v] of component) {
+            adjMap.set(u, [...(adjMap.get(u) ?? []), v])
+            if (!g.directed) {
+                adjMap.set(v, [...(adjMap.get(v) ?? []), u])
+            }
+        }
+        subgraphs.push(adjMap)
+    }
+    const cutvertices: Set<T> = subgraphs.length > 1 ? new Set(components.map(x => x[x.length - 1][0])) : new Set()
+
+    return [cutvertices, subgraphs]
 }
 
 function mustGet<T, U> (map: Map<T, U>, key: T): U {
@@ -37,23 +57,22 @@ function mustGet<T, U> (map: Map<T, U>, key: T): U {
     return value
 }
 
-function visitBiconnect<T> (g: Graph<T>, u: T, parent: T | null, discovery: Map<T, number>, discoveryIndex: number, lowpt: Map<T, number>, edges: Array<[T, T]>, components: Array<Array<[T, T]>>) {
+function visitBiconnect<T> (g: Graph<T>, u: T, parent: T | null, discovery: Map<T, number>, discoveryIndex: number, lowpt: Map<T, number>, edges: Array<[T, T]>, components: Array<Array<[T, T]>>): void {
     discovery.set(u, discoveryIndex)
     lowpt.set(u, discoveryIndex)
     discoveryIndex++
-    console.log(`lowpt[${u}] = ${lowpt.get(u)}`)
     for (const v of g.neighbours(u)) {
         if (!discovery.has(v)) {
-            console.log('discover', v)
             edges.push([u, v])
             visitBiconnect(g, v, u, discovery, discoveryIndex, lowpt, edges, components)
-            console.log(`lowpt[${u}] = min(lowpt[${u}], lowpt[${v}])`)
+            // lowpt(u) is less or equal to the lowpt of all descendants of u
             lowpt.set(u, Math.min(mustGet(lowpt, u), mustGet(lowpt, v)))
-            console.log(`lowpt[${u}] >= ${discovery.get(u)} ?`)
+            // If lowpt(v) >= d(u), then any back edges originating in v and its descendants never leave the subtree T[u].
+            // Moreover, u is a cutvertex because there is only one path from an ancestor of u to v.
             if (mustGet(lowpt, v) >= mustGet(discovery, u)) {
-                console.log('cutvertex = ', u)
                 const component: Array<[T, T]> = []
                 while (true) {
+                    // The biconnected component contains all edges (w1,w2) such that v is connected to w1 via one or more tree edges.
                     const [w1, w2] = edges[edges.length - 1]
                     if (mustGet(discovery, w1) < mustGet(discovery, v)) break
                     component.push([w1, w2])
@@ -64,7 +83,6 @@ function visitBiconnect<T> (g: Graph<T>, u: T, parent: T | null, discovery: Map<
                 components.push(component)
             }
         } else if (mustGet(discovery, v) < mustGet(discovery, u) && v !== parent) {
-            console.log('back edge', v, u)
             edges.push([u, v])
             lowpt.set(u, Math.min(mustGet(lowpt, u), mustGet(discovery, v)))
         }
