@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 import { VertexColouringVisualizer } from './visualizers/VertexColouringVisualizer'
+import { CutvertexVisualizer } from './visualizers/CutvertexVisualizer'
 
 export interface SimGraph {
     id: number
@@ -24,11 +25,17 @@ export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
 export enum VisualizerType {
     tooltip = 'tooltip',
     spanningTree = 'spanningTree',
-    vertexColouring = 'vertexColouring'
+    vertexColouring = 'vertexColouring',
+    cutvertices = 'cutvertices',
 }
 
 export const DEFAULT_CIRCLE_FILL_COLOR = 'white'
+export const DEFAULT_CIRCLE_STROKE_WIDTH = 1
+export const DEFAULT_CIRCLE_STROKE_DASHARRAY = null
 export const FOCUSED_CIRCLE_FILL_COLOR = 'orangered'
+export const SECONDARY_CIRCLE_FILL_COLOR = 'lightcyan'
+export const SECONDARY_CIRCLE_STROKE_DASHARRAY = '2'
+export const SECONDARY_CIRCLE_STROKE_WIDTH = 4
 export const DEFAULT_LINE_STROKE_WIDTH = 1
 export const BOLD_LINE_STROKE_WIDTH = 5
 
@@ -48,6 +55,7 @@ interface GraphSimulationProps {
     visualizers: VisualizerType[]
     onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
     onVisualizeVertexColouring: (graphId: number, rootVertex: string) => Map<string, number>
+    onVisualizeCutvertices: (graphId: number, rootVertex: string) => string[]
 }
 
 /**
@@ -55,7 +63,7 @@ interface GraphSimulationProps {
  *
  * Adapted from https://reactfordataviz.com/articles/force-directed-graphs-with-react-and-d3v7/
  */
-const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, ...props }: GraphSimulationProps): JSX.Element => {
+const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, onVisualizeCutvertices, ...props }: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
     const [simulation, setSimulation] = useState<d3.Simulation<SimVertex, SimEdge>>(d3.forceSimulation())
 
@@ -84,7 +92,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
     }, [props.graphs])
 
     // keeps stable reference to the drawSimulatedGraph function
-    const handleDraw = useCallback(drawSimulatedGraph, [props.visualizers, onVisualizeSpanningTree, onVisualizeVertexColouring])
+    const handleDraw = useCallback(drawSimulatedGraph, [props.visualizers, onVisualizeSpanningTree, onVisualizeVertexColouring, onVisualizeCutvertices])
 
     useEffect(() => {
         // Clean up the SVG elements of old graphs
@@ -162,6 +170,9 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         }
         if (props.visualizers.includes(VisualizerType.spanningTree)) {
             vertices.call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
+        }
+        if (props.visualizers.includes(VisualizerType.cutvertices)) {
+            vertices.call(CutvertexVisualizer, graph, onVisualizeCutvertices)
         }
         if (props.visualizers.includes(VisualizerType.tooltip)) {
             vertices.call(TooltipVisualizer, svg, graph)

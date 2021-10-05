@@ -12,10 +12,11 @@ interface GraphWindowProps {
 }
 
 const GraphWindow = (props: GraphWindowProps): JSX.Element => {
-    const [selectedVisualizers, setSelectedVisualizer] = useState({
+    const [selectedVisualizers, setSelectedVisualizer] = useState<Record<VisualizerType, boolean>>({
         [VisualizerType.tooltip]: true,
         [VisualizerType.spanningTree]: false,
-        [VisualizerType.vertexColouring]: false
+        [VisualizerType.vertexColouring]: false,
+        [VisualizerType.cutvertices]: false
     })
 
     function getSimVertices (graph: Graph): SimVertex[] {
@@ -72,6 +73,12 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         return colourVertices(g, rootVertex)
     }, [props.graphs])
 
+    const handleVisualizeCutvertices = useCallback((graphId: number, rootVertex: string): string[] => {
+        const g = props.graphs.find(x => x.id === graphId)
+        if (g === undefined) throw Error(`INTERNAL ERROR: graph ${graphId} not found`)
+        return Array.from(findBiconnectedComponents(g, rootVertex)[0])
+    }, [props.graphs])
+
     function handleChangeVisualizer (event: ChangeEvent<HTMLInputElement>): void {
         const visualizer = VisualizerType[event.target.value as keyof typeof VisualizerType]
         setSelectedVisualizer(prev => ({ ...prev, [visualizer]: event.target.checked }))
@@ -93,6 +100,13 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
         [props.graphs]
     )
 
+    const visualizers = [
+        { name: 'Tooltip', id: VisualizerType.tooltip },
+        { name: 'Spanning tree', id: VisualizerType.spanningTree },
+        { name: 'Vertex colouring', id: VisualizerType.vertexColouring },
+        { name: 'Cutvertices', id: VisualizerType.cutvertices }
+    ]
+
     return <>
         <div id="graph-wrapper">
             <GraphSimulation
@@ -100,22 +114,19 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                 visualizers={Object.entries(selectedVisualizers).filter(x => x[1]).map(x => x[0] as VisualizerType)}
                 onVisualizeSpanningTree={handleVisualizeSpanningTree}
                 onVisualizeVertexColouring={handleVisualizeVertexColouring}
+                onVisualizeCutvertices={handleVisualizeCutvertices}
             />
             <div id="graph-configs">
                 <label>Visualizers
                     <span style={{ margin: '1em' }}>
-                        <label>Tooltip <input type="checkbox" key={VisualizerType.tooltip} value={VisualizerType.tooltip} checked={selectedVisualizers.tooltip} onChange={handleChangeVisualizer} /></label>
-                        <label>Spanning tree <input type="checkbox" key={VisualizerType.spanningTree} value={VisualizerType.spanningTree} checked={selectedVisualizers.spanningTree} onChange={handleChangeVisualizer} /></label>
-                        <label>Vertex colouring <input type="checkbox" key={VisualizerType.vertexColouring} value={VisualizerType.vertexColouring} checked={selectedVisualizers.vertexColouring} onChange={handleChangeVisualizer} /></label>
+                        {
+                            visualizers.map(x => {
+                                return <label>{x.name} <input type="checkbox" key={VisualizerType[x.id]} value={VisualizerType[x.id]} checked={selectedVisualizers[x.id]} onChange={handleChangeVisualizer} /></label>
+                            })
+                        }
                     </span>
                 </label>
             </div>
-            <button onClick={
-                () => {
-                    if (props.graphs.length === 0) return
-                    findBiconnectedComponents(props.graphs[0])
-                }
-            }>BCC</button>
         </div>
     </>
 }
