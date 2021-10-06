@@ -121,7 +121,7 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                     <span style={{ margin: '1em' }}>
                         {
                             visualizers.map(x => {
-                                return <label>{x.name} <input type="checkbox" key={VisualizerType[x.id]} value={VisualizerType[x.id]} checked={selectedVisualizers[x.id]} onChange={handleChangeVisualizer} /></label>
+                                return <label key={VisualizerType[x.id]}>{x.name} <input type="checkbox" value={VisualizerType[x.id]} checked={selectedVisualizers[x.id]} onChange={handleChangeVisualizer} /></label>
                             })
                         }
                     </span>

@@ -6,11 +6,9 @@ export function CutvertexVisualizer (
     graph: SimGraph,
     cutvertexFactory: (graphId: number, root: string) => string[]
 ): void {
-    console.log(selection)
     selection
         .on('mouseenter.' + VisualizerType.cutvertices, (_, vertex) => {
             const cutvertices = cutvertexFactory(graph.id, vertex.id.toString())
-            console.log(cutvertices)
             selection.attr('fill', function (u) {
                 return cutvertices.includes(u.id.toString()) ? SECONDARY_CIRCLE_FILL_COLOR : this.getAttribute('fill')
             })

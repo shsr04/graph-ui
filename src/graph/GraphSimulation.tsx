@@ -158,21 +158,21 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
                 return this.getAttribute('fill') ?? DEFAULT_CIRCLE_FILL_COLOR
             })
             .call(handleDrag(simulation))
-            .call((sel) => {
+            .call(selection => {
                 // unregister event handlers
                 const handlers = Object.keys(VisualizerType).map(x => '.' + x).join(' ')
-                sel.on(handlers, null)
+                selection.on(handlers, null)
             })
 
         // apply visualizers (from background to foreground)
         if (props.visualizers.includes(VisualizerType.vertexColouring)) {
             vertices.call(VertexColouringVisualizer, graph, onVisualizeVertexColouring)
         }
-        if (props.visualizers.includes(VisualizerType.spanningTree)) {
-            vertices.call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
-        }
         if (props.visualizers.includes(VisualizerType.cutvertices)) {
             vertices.call(CutvertexVisualizer, graph, onVisualizeCutvertices)
+        }
+        if (props.visualizers.includes(VisualizerType.spanningTree)) {
+            vertices.call(SpanningTreeVisualizer, graph, edges, onVisualizeSpanningTree)
         }
         if (props.visualizers.includes(VisualizerType.tooltip)) {
             vertices.call(TooltipVisualizer, svg, graph)
