@@ -6,6 +6,7 @@ import GraphSimulation, { SimEdge, SimGraph, SimVertex, VisualizerType } from '.
 import './GraphWindow.css'
 import { colourVertices } from '../algorithms/VertexColouring'
 import { findBiconnectedComponents } from '../algorithms/BiconnectedComponents'
+import { checkPlanarity } from '../algorithms/Planarity'
 
 interface GraphWindowProps {
     graphs: Graph[]
@@ -127,6 +128,11 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                     </span>
                 </label>
             </div>
+            <button onClick={() => {
+                if (props.graphs.length > 0) {
+                    checkPlanarity(props.graphs[0])
+                }
+            }}>Planarity</button>
         </div>
     </>
 }
