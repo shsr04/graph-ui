@@ -1,10 +1,10 @@
 import { dfs } from './Dfs'
 import { Graph } from './Graph'
 
-class ComplexMap<T, U> {
+class ComplexMap<T, U> extends Map<T, U> {
     private readonly map = new Map<string, U>()
 
-    set (key: T, value: U): this {
+    set(key: T, value: U): this {
         this.map.set(JSON.stringify(key), value)
         return this
     }
@@ -22,7 +22,7 @@ class ComplexMap<T, U> {
     }
 }
 
-export function checkPlanarity<T> (g: Graph<T>): void {
+export function checkPlanarity<T>(g: Graph<T>): void {
     if (g.directed) {
         throw Error('Planarity check is not implemented for directed graphs')
     }
@@ -32,6 +32,23 @@ export function checkPlanarity<T> (g: Graph<T>): void {
         return
     }
 
+    
+
+    const height = new ComplexMap<T, number>()
+    const lowpt = new ComplexMap<[T, number], number>()
+    const lowpt2 = new ComplexMap<[T, number], number>()
+    const nestingDepth = new ComplexMap<[T, number], number>()
+
+    computeNestingDepth(g, height, lowpt, lowpt2, nestingDepth)
+
+    console.log("Phase 1:", lowpt, lowpt2, nestingDepth)
+
+
+
+    // TODO test
+}
+
+function computeNestingDepth<T>(g: Graph<T>, height: ComplexMap<T,number>, lowpt: ComplexMap<[T, number], number>, lowpt2: ComplexMap<[T, number], number>, nestingDepth: Map<[T, number], number>): void {
     type EdgeType = 'tree' | 'back'
     interface TreeAdj {
         target: T
@@ -39,20 +56,13 @@ export function checkPlanarity<T> (g: Graph<T>): void {
     }
     const tree = new Map<T, TreeAdj[]>()
 
-    const d = new ComplexMap<T, number>()
-    let di = 0
-
-    const lowpt = new ComplexMap<[T, number], number>()
-    const lowpt2 = new ComplexMap<[T, number], number>()
-    const nestingDepth = new ComplexMap<[T, number], number>()
-
     dfs(g, {
-        preprocess: u => {
-            d.set(u, di++)
+        preprocess: (u, parent) => {
+            height.set(u, parent === null ? 0 : height.extract(parent) + 1)
         },
         preexplore: (u, k, c, parent) => {
-            lowpt.set([u, k], d.extract(u))
-            lowpt2.set([u, k], d.extract(u))
+            lowpt.set([u, k], height.extract(u))
+            lowpt2.set([u, k], height.extract(u))
 
             const v = g.adj(u, k)
             if (c === 'white') {
@@ -61,10 +71,10 @@ export function checkPlanarity<T> (g: Graph<T>): void {
             }
 
             tree.set(u, [...(tree.get(u) ?? []), { target: v, type: 'back' }])
-            lowpt.set([u, k], d.extract(v))
+            lowpt.set([u, k], height.extract(v))
 
             // set nesting depth
-            if (lowpt2.extract([u, k]) < d.extract(v)) {
+            if (lowpt2.extract([u, k]) < height.extract(v)) {
                 // back edge (u,v) is chordal, needs to be nested deeper
                 nestingDepth.set([u, k], 2 * lowpt.extract([u, k]) + 1)
             } else {
@@ -75,17 +85,8 @@ export function checkPlanarity<T> (g: Graph<T>): void {
                 return
             }
 
-            // find edge index from parent to u
-            let parentEdge: number | null = null
-            g.neighbours(parent).forEach((w, i) => {
-                if (w === u) {
-                    parentEdge = i
-                }
-            })
-            if (parentEdge === null) throw Error(`INTERNAL ERROR: parent edge index ${JSON.stringify(parent)} -> ${JSON.stringify(u)} not found`)
-
             // update lowpt of parent edge
-            const p: [T, number] = [parent, parentEdge]
+            const p: [T, number] = [parent, g.index(parent, u)]
             if (lowpt.extract([u, k]) < lowpt.extract(p)) {
                 lowpt2.set(p, Math.min(lowpt.extract(p), lowpt2.extract([u, k])))
                 lowpt.set(p, lowpt.extract([u, k]))
@@ -96,8 +97,18 @@ export function checkPlanarity<T> (g: Graph<T>): void {
             }
         }
     })
+}
 
-    console.log(lowpt, lowpt2, nestingDepth)
-
-    // TODO test
+function checkLRPartition<T>(g: Graph<T>, u: T, nestingDepth: ComplexMap<[T,number], number>): void {
+    type ConflictItem = [T,number]
+    interface ConflictPair {
+        left: ConflictItem
+        right: ConflictItem
+    }
+    const conflictStack: ConflictItem[] = []
+    const stackMarkers = new Map<[T, number], ConflictItem>()
+    const sortedEdges = Array.from(Array(g.deg(u)).keys()).sort((x, y) => nestingDepth.extract([u,x]) - nestingDepth.extract([u,y]))
+    for(const k of sortedEdges) {
+        // TODO continue
+    }
 }
