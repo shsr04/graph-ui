@@ -4,16 +4,16 @@ import { Graph } from './Graph'
 class ComplexMap<T, U> extends Map<T, U> {
     private readonly map = new Map<string, U>()
 
-    set (key: T, value: U): this {
+    set(key: T, value: U): this {
         this.map.set(JSON.stringify(key), value)
         return this
     }
 
-    get (key: T): U | undefined {
+    get(key: T): U | undefined {
         return this.map.get(JSON.stringify(key))
     }
 
-    extract (key: T): U {
+    extract(key: T): U {
         const result = this.get(key)
         if (result === undefined) {
             throw Error(`Extraction error: no value for key ${JSON.stringify(key)}`)
@@ -22,7 +22,7 @@ class ComplexMap<T, U> extends Map<T, U> {
     }
 }
 
-export function checkPlanarity<T> (g: Graph<T>): void {
+export function checkPlanarity<T>(g: Graph<T>): void {
     if (g.directed) {
         throw Error('Planarity check is not implemented for directed graphs')
     }
@@ -48,7 +48,7 @@ export function checkPlanarity<T> (g: Graph<T>): void {
     // TODO test
 }
 
-function computeNestingDepth<T> (g: Graph<T>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, lowpt2: ComplexMap<[T, number], number>, nestingDepth: Map<[T, number], number>): void {
+function computeNestingDepth<T>(g: Graph<T>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, lowpt2: ComplexMap<[T, number], number>, nestingDepth: Map<[T, number], number>): void {
     type EdgeType = 'tree' | 'back'
     interface TreeAdj {
         target: T
@@ -99,16 +99,16 @@ function computeNestingDepth<T> (g: Graph<T>, height: ComplexMap<T, number>, low
     })
 }
 
-interface ConflictItem<T> {
+interface EdgeInterval<T> {
     low?: [T, number]
     high?: [T, number]
 }
 interface ConflictPair<T> {
-    left?: ConflictItem<T>
-    right?: ConflictItem<T>
+    left?: EdgeInterval<T>
+    right?: EdgeInterval<T>
 }
 
-function getLowestPoint<T> (pair: ConflictPair<T>, lowpt: ComplexMap<[T, number], number>): number {
+function getLowestPoint<T>(pair: ConflictPair<T>, lowpt: ComplexMap<[T, number], number>): number {
     const left = pair.left
     const right = pair.right
     if (left === undefined && right !== undefined) {
@@ -123,12 +123,18 @@ function getLowestPoint<T> (pair: ConflictPair<T>, lowpt: ComplexMap<[T, number]
     return Math.min(lowpt.extract(left.low), lowpt.extract(right.low))
 }
 
-function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number], number>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, conflictStack: Array<ConflictPair<T>>, stackBottom: ComplexMap<[T, number], ConflictPair<T> | null>): void {
+function isConflicting<T>(interval?: EdgeInterval<T>, edge: [T,number], lowpt: ComplexMap<[T, number], number>): boolean {
+    // high must be set? If not, what should be returned?
+    if(interval?.high === undefined) return false
+    return lowpt.extract(interval.high) > lowpt.extract(edge)
+}
+
+function checkLRPartition<T>(g: Graph<T>, nestingDepth: ComplexMap<[T, number], number>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, conflictStack: Array<ConflictPair<T>>, stackBottom: ComplexMap<[T, number], ConflictPair<T> | null>): void {
     const colour: ComplexMap<T, Colour> = new ComplexMap(g.vertices().map(x => [x, 'white']))
     // For each edge e, stores the first return edge f to its lowpoint u with lowpt(e) = height(u)
     const lowptEdge: ComplexMap<[T, number], [T, number]> = new ComplexMap()
     // For each edge e, stores the orientation
-    const side: ComplexMap<[T, number], -1|1> = new ComplexMap()
+    const side: ComplexMap<[T, number], -1 | 1> = new ComplexMap()
     // For each edge e, stores a reference to the highest edge of the next conflict pair
     const ref: ComplexMap<[T, number], [T, number]> = new ComplexMap()
 
@@ -136,9 +142,12 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
      * Checks the LR partitioning of the graph.
      * @param u Current vertex
      * @param parent Parent vertex
-     * @returns The planarity status of the graph. If true, the graph is planar. If false, the graph is not planar. Null should never be returned, it is only used inside the algorithm.
+     * @returns The planarity status of the graph. 
+     * If true, the graph is planar. 
+     * If false, the graph is not planar. 
+     * If null, the algorithm was inconclusive. This should never happen and indicates an implementation error.
      */
-    function visit (u: T, parent: T | null): boolean|null {
+    function visit(u: T, parent: T | null): boolean | null {
         colour.set(u, 'grey')
         const sortedEdges = Array.from(Array(g.deg(u)).keys()).sort((x, y) => nestingDepth.extract([u, x]) - nestingDepth.extract([u, y]))
         for (const k of sortedEdges) {
@@ -146,13 +155,15 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
             stackBottom.set(e, conflictStack[conflictStack.length - 1] ?? null)
 
             const v = g.adj(u, k)
-            // If e is a tree edge, recursive determine constraints
+            // If e is a tree edge, recursively determine constraints
             if (colour.extract(v) === 'white') {
-                if (visit(v, u) === false) return false
+                const result = visit(v, u)
+                if (result !== null) return result
             }
             // If e is a back edge, push it onto the conflict stack for later consideration
             else {
                 lowptEdge.set(e, e)
+                // Partitioning Invariant: The conflict pairs P[...] accumulated between exploring a tree edge u->v and backtracking over it satisfy all the LR constraints associated with u->v.
                 conflictStack.push({ right: { low: e, high: e } })
             }
 
@@ -164,45 +175,14 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
                 // If we are in the first outgoing edge e0, we leave it on the stack
                 if (e[1] === e0[1]) {
                     lowptEdge.set(pe, lowptEdge.extract(e0))
-                }
-                // For all other outgoing edges e1,...,ek, we merge their constraints into those collected for e
-                else {
+                } else {
+                    // For all other outgoing edges e1,...,ek, we merge their constraints into those collected for e
                     const pair: ConflictPair<T> = {}
-                    // Merge the constraints of return edges into the right interval
-                    while (true) {
-                        const top = conflictStack.pop()
-                        if (top === undefined) throw Error('INTERNAL ERROR: Conflict stack is empty')
-                        if (top.left !== undefined) {
-                            const tmp = top.right
-                            top.right = top.left
-                            top.left = tmp
-                        }
-                        // If conflict pair has no non-empty intervals, there is a conflict. Therefore, the graph is not planar.
-                        if (top.left !== undefined) {
-                            console.log('--- Graph is not planar. ---')
-                            return false
-                        }
-
-                        // Merge to the right side because of "same" constraints on all return edges
-                        if (top.right === undefined || top.right.low === undefined || top.right.high === undefined) throw Error(`INTERNAL ERROR: Top conflict pair ${JSON.stringify(top)} is not non-empty`)
-                        if (lowpt.extract(top.right.low) > lowpt.extract(pe)) {
-                            if (pair.right === undefined) {
-                                pair.right = { high: top.right.high }
-                            } else {
-                                if (pair.right.low === undefined) throw Error(`INTERNAL ERROR: Right low edge of ${JSON.stringify(pair)} is empty`)
-                                ref.set(pair.right.low, top.right.high)
-                            }
-                            pair.right = { ...pair.right, low: top.right.low }
-                        } else {
-                            ref.set(top.right.low, lowptEdge.extract(pe))
-                        }
-
-                        if (JSON.stringify(conflictStack[conflictStack.length - 1]) === JSON.stringify(stackBottom.extract(e))) {
-                            break
-                        }
+                    mergeIntoRightInterval(pair, e, pe)
+                    mergeIntoLeftInterval(pair, e)
+                    if(pair.left !== undefined || pair.right !== undefined) {
+                        conflictStack.push(pair)
                     }
-
-                    // TODO continue ...
                 }
             }
 
@@ -210,7 +190,7 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
                 return null
             }
 
-            // Remove the back edges from the stack which end at parent
+            // Remove the back edges which end at parent from the stack
             while (conflictStack.length > 0 && getLowestPoint(conflictStack[conflictStack.length - 1], lowpt) === height.extract(parent)) {
                 const top = conflictStack.pop()
                 if (top?.left?.low !== undefined) {
@@ -222,13 +202,87 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
                 return null
             }
 
-            const top = conflictStack.pop()
+            const top = conflictStack[conflictStack.length - 1]
+            conflictStack.pop()
+            // Trim left interval
+            if(top.left === undefined) throw Error(`INTERNAL ERROR: left interval of ${JSON.stringify(top)} is empty`)
+            while(top.left.high !== undefined && g.adj(...top.left.high) === parent) {
+                top.left.high = ref.extract(top.left.high)
+            }
 
-            // Trim left and right intervals of last conflict pair
-            // TODO continue after implementing constraints
+            // TODO continue
         }
         colour.set(u, 'black')
         return null
+    }
+
+    /**
+     * Merges the constraints of return edges above e into the right interval of the given conflict pair.
+     */
+    function mergeIntoRightInterval(pair: ConflictPair<T>, e: [T,number], pe: [T, number]) {
+        while (true) {
+            // Ordering Invariant: For any two conflict pairs P,Q where P is above Q in the stack, there exists no edge e in P such that lowpt(e) < lowpt(f) where edge f is in Q.
+            const top = conflictStack.pop()
+            if (top === undefined) throw Error('INTERNAL ERROR: Conflict stack is empty')
+            if (top.left !== undefined) {
+                const tmp = top.right
+                top.right = top.left
+                top.left = tmp
+            }
+            // If conflict pair has no non-empty intervals, there is a conflict. Therefore, the graph is not planar.
+            if (top.left !== undefined) {
+                console.log('--- Graph is not planar. ---')
+                return false
+            }
+
+            // Merge to the right side because of "same" constraints on all return edges
+            if (top.right === undefined || top.right.low === undefined || top.right.high === undefined) throw Error(`INTERNAL ERROR: Top conflict pair ${JSON.stringify(top)} is not non-empty`)
+            if (lowpt.extract(top.right.low) > lowpt.extract(pe)) {
+                if (pair.right === undefined) {
+                    pair.right = { high: top.right.high }
+                } else {
+                    if (pair.right.low === undefined) throw Error(`INTERNAL ERROR: Right low edge of ${JSON.stringify(pair)} is empty`)
+                    ref.set(pair.right.low, top.right.high)
+                }
+                pair.right = { ...pair.right, low: top.right.low }
+            } else {
+                ref.set(top.right.low, lowptEdge.extract(pe))
+            }
+
+            // If we have merged all edges in the stack above e, go to next step
+            if (JSON.stringify(conflictStack[conflictStack.length - 1]) === JSON.stringify(stackBottom.extract(e))) {
+                break
+            }
+        }
+    }
+
+    function mergeIntoLeftInterval(pair: ConflictPair<T>, e: [T,number]) {
+        const top = conflictStack[conflictStack.length - 1]
+        while(isConflicting(top.left, e, lowpt) || isConflicting(top.right, e, lowpt)) {
+            conflictStack.pop()
+            if(isConflicting(top.right, e, lowpt)) {
+                const tmp = top.right; top.left = top.right; top.right = tmp
+            }
+            if(isConflicting(top.right, e, lowpt)) {
+                console.log(`Graph is not planar due to conflict: ${JSON.stringify(top)}`)
+                return false
+            }
+
+            if(pair.right?.low === undefined || top.right?.high === undefined) throw Error(`INTERNAL ERROR: cannot merge empty right intervals of ${JSON.stringify(pair)} and ${JSON.stringify(top)}`)
+            ref.set(pair.right?.low, top.right?.high)
+            if(top.right.low !== undefined) {
+                pair.right.low = top.right.low
+            }
+
+            if(top.left?.high === undefined) throw Error(`INTERNAL ERROR: top left interval of ${JSON.stringify(top)} is empty`)
+            if(pair.left === undefined) {
+                pair.left = { high: top.left.high }
+            } else {
+                if(pair.left.low === undefined) throw Error(`INTERNAL ERROR: low left interval of ${JSON.stringify(pair)} is empty`)
+                ref.set(pair.left.low, top.left.high)
+            }
+            pair.left.low = top.left.high
+        }
     }
 
     for (const u of g.vertices()) {
