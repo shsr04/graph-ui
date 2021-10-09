@@ -8,7 +8,7 @@ import { getProperties, GraphProperties } from './GraphProperties'
 export class Graph<IdType = string> {
     public properties: GraphProperties
 
-    constructor(
+    constructor (
         /**
          * Index of the graph over all stored graphs.
          */
@@ -34,20 +34,20 @@ export class Graph<IdType = string> {
         this.properties = getProperties(this)
     }
 
-    public deg(u: IdType): number {
+    public deg (u: IdType): number {
         const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
         return this.adjMap.get(u)?.length ?? -1
     }
 
-    public adj(u: IdType, k: number): IdType {
+    public adj (u: IdType, k: number): IdType {
         const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
         if (k >= adj.length) { throw Error(`Vertex ${JSON.stringify(u)} has degree ${adj.length}: therefore, cannot access neighbour #${k}.`) }
         return adj[k]
     }
 
-    public index(u: IdType, v: IdType): number {
+    public index (u: IdType, v: IdType): number {
         let result: number | null = null
         this.neighbours(u).forEach((w, i) => {
             if (w === v) {
@@ -58,25 +58,25 @@ export class Graph<IdType = string> {
         return result
     }
 
-    public vertices(): IdType[] {
+    public vertices (): IdType[] {
         return Array.from(this.adjMap.keys())
     }
 
-    public order(): number {
+    public order (): number {
         return this.vertices().length
     }
 
-    public neighbours(u: IdType): IdType[] {
+    public neighbours (u: IdType): IdType[] {
         const adj = this.adjMap.get(u)
         if (adj === undefined) { throw Error(`Vertex ${JSON.stringify(u)} is not in graph ${this.name}.`) }
         return adj
     }
 
-    public edges(): Array<[IdType, IdType]> {
+    public edges (): Array<[IdType, IdType]> {
         return Array.from(this.adjMap.entries()).flatMap(([u, adjList]) => adjList.map<[IdType, IdType]>(v => ([u, v])))
     }
 
-    public size(): number {
+    public size (): number {
         if (this.directed) {
             return this.edges().length
         } else {
@@ -84,7 +84,7 @@ export class Graph<IdType = string> {
         }
     }
 
-    public serialize(): any {
+    public serialize (): any {
         return {
             id: this.id,
             name: this.name,
