@@ -3,6 +3,7 @@ import { Graph } from './Graph'
 import { decomposeBipartite } from './Partition'
 import { colourVertices } from './VertexColouring'
 import { findBiconnectedComponents } from './BiconnectedComponents'
+import { checkPlanarity } from './Planarity'
 
 export interface GraphProperties {
     /**
@@ -98,6 +99,8 @@ export interface GraphProperties {
      * As a result, G[i+1] is 2-chromatic and bipartite. [END]
      */
     chromaticity: number | null
+
+    isPlanar: boolean
 
     /**
      * TODO:
@@ -206,6 +209,11 @@ function isBiconnected<T> (g: Graph<T>): boolean {
     return findBiconnectedComponents(g)[0].size === 0
 }
 
+function isPlanar<T> (g: Graph<T>): boolean {
+    // return checkPlanarity(g)
+    return false
+}
+
 export function getProperties<T> (g: Graph<T>): GraphProperties {
     return {
         chromaticity: chromaticity(g),
@@ -219,6 +227,7 @@ export function getProperties<T> (g: Graph<T>): GraphProperties {
         isCycle: isCycle(g),
         isEulerian: isEulerian(g),
         isGear: isGear(g),
+        isPlanar: isPlanar(g),
         isStar: isStar(g),
         isTree: isTree(g),
         isWheel: isWheel(g)
