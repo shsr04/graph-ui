@@ -2,12 +2,12 @@ import { useCallback, useState } from 'react'
 import { Graph } from './algorithms/Graph'
 import './App.css'
 import EditorWindow from './editor/EditorWindow'
-import GraphGenerator from './editor/GraphGenerator'
+import GraphGenerator from './graph/generator/GraphGenerator'
 import GraphWindow from './graph/GraphWindow'
 
 interface GraphDatabase { editor: Graph[], random: Graph[] }
 
-function getGraphsFromStorage (key: string): GraphDatabase|null {
+function getGraphsFromStorage (key: string): GraphDatabase | null {
     const storedDb = localStorage.getItem(key)
     if (storedDb === null) { return null }
     try {
@@ -45,12 +45,22 @@ function App (): JSX.Element {
 
     return (
         <div className="App">
-            <div id="left-side">
-                <EditorWindow onInputGraphs={handleEditorInputGraphs} />
-                <GraphGenerator onGenerateGraphs={handleRandomInputGraphs} />
+            <div className="heading">
+                <h1>Graph UI</h1>
             </div>
-            <div id="right-side">
-                <GraphWindow graphs={Object.values(graphDb).flat()} />
+            <div className="constrained">
+                <div id="left-side">
+                    <EditorWindow onInputGraphs={handleEditorInputGraphs} />
+                    <label>
+                    Enter graph specification here. Supports a subset of <a href="https://www.graphviz.org/doc/info/lang.html">DOT syntax</a>. (Subgraphs, attributes and ports are not supported.)
+                    </label>
+                </div>
+            </div>
+            <div className="constrained">
+                <div id="right-side">
+                    <GraphWindow graphs={Object.values(graphDb).flat()} />
+                    <GraphGenerator onGenerateGraphs={handleRandomInputGraphs} />
+                </div>
             </div>
         </div>
     )

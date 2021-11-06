@@ -1,5 +1,22 @@
 #graph-wrapper {
     display: grid;
-    grid-template-rows: 600px auto;
+    grid-template-rows: 600px 1fr;
     align-items: center;
+}
+
+#graph-configs {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    padding: 1em;
+    background: hsla(224, 67%, 65%, 0.555);
+    font-family: 'Label';
+}
+
+#graph-configs > label {
+    font-family: 'LabelBold';
+}
+
+#graph-visualizers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
 }

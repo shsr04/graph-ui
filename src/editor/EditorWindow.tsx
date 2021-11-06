@@ -1,4 +1,3 @@
-import * as d3 from 'd3'
 import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
 import { Graph } from '../algorithms/Graph'
@@ -41,8 +40,6 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
         onInputGraphs(parseResult.map(mapToGraph))
     }, [parseResult, onInputGraphs])
 
-    const lineNumbers = d3.range(1, 100).map(n => <span key={n}>{n}<br /></span>)
-
     function handleChangeText (event: ChangeEvent<HTMLTextAreaElement>): void {
         setText(event.target.value)
         localStorage.setItem('graphui.editor.codeInput', event.target.value)
@@ -59,10 +56,6 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
     return (
         <>
             <div id="editor-wrapper">
-                <label className="full-width">
-                    Enter graph specification here. Supports a subset of <a href="https://www.graphviz.org/doc/info/lang.html">DOT syntax</a>. (Subgraphs, attributes and ports are not supported.)
-                </label>
-                <div id="line-numbers">{lineNumbers}</div>
                 <textarea placeholder="Enter graph specification..."
                     cols={80} rows={48} autoComplete="off" tabIndex={-1}
                     ref={textAreaRef}

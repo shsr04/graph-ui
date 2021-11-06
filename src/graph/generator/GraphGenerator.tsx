@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Graph } from '../algorithms/Graph'
-import { generateGraph } from '../algorithms/GraphGenerator'
+import { Graph } from '../../algorithms/Graph'
+import { generateGraph } from '../../algorithms/GraphGenerator'
 import './GraphGenerator.css'
 
 interface GraphGeneratorProps {
@@ -52,13 +52,13 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
                 Generate random graph
             </label>
 
-            <div>
+            <div className="param">
                 <label>n</label>
                 <input type="text" value={orderInput} onChange={e => handleChangeOrder(e.target.value)} className={orderError !== null ? 'invalid' : ''} />
                 {orderError !== null && <span className="errorText">{orderError}</span>}
             </div>
 
-            <div>
+            <div className="param">
                 <label>p</label>
                 <input type="text" value={probabilityInput} onChange={e => handleChangeProbability(e.target.value)} className={probabilityError !== null ? 'invalid' : ''} />
                 {probabilityError !== null && <span className="errorText">{probabilityError}</span>}

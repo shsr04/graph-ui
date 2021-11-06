@@ -6,7 +6,6 @@ import GraphSimulation, { SimEdge, SimGraph, SimVertex, VisualizerType } from '.
 import './GraphWindow.css'
 import { colourVertices } from '../algorithms/VertexColouring'
 import { findBiconnectedComponents } from '../algorithms/BiconnectedComponents'
-import { checkPlanarity } from '../algorithms/Planarity'
 
 interface GraphWindowProps {
     graphs: Graph[]
@@ -118,21 +117,15 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                 onVisualizeCutvertices={handleVisualizeCutvertices}
             />
             <div id="graph-configs">
-                <label>Visualizers
-                    <span style={{ margin: '1em' }}>
-                        {
-                            visualizers.map(x => {
-                                return <label key={VisualizerType[x.id]}>{x.name} <input type="checkbox" value={VisualizerType[x.id]} checked={selectedVisualizers[x.id]} onChange={handleChangeVisualizer} /></label>
-                            })
-                        }
-                    </span>
-                </label>
+                <label>Visualizers</label>
+                <div id="graph-visualizers">
+                    {
+                        visualizers.map(x => {
+                            return <label key={VisualizerType[x.id]}>{x.name} <input type="checkbox" value={VisualizerType[x.id]} checked={selectedVisualizers[x.id]} onChange={handleChangeVisualizer} /></label>
+                        })
+                    }
+                </div>
             </div>
-            <button onClick={() => {
-                if (props.graphs.length > 0) {
-                    checkPlanarity(props.graphs[0])
-                }
-            }}>Planarity</button>
         </div>
     </>
 }

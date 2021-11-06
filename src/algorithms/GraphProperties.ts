@@ -3,7 +3,6 @@ import { Graph } from './Graph'
 import { decomposeBipartite } from './Partition'
 import { colourVertices } from './VertexColouring'
 import { findBiconnectedComponents } from './BiconnectedComponents'
-import { checkPlanarity } from './Planarity'
 
 export interface GraphProperties {
     /**

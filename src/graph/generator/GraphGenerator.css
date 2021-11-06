@@ -10,9 +10,16 @@ input.invalid {
     display: grid;
     grid-template-columns: repeat(4, auto);
     column-gap: 1em;
+    align-items: center;
+    background: hsla(123, 59%, 69%, 0.555);
+    font-family: 'Label';
 }
 
-#generator-wrapper div {
+#generator-wrapper > label {
+    font-family: 'LabelBold';
+}
+
+#generator-wrapper .param {
     display: grid;
     grid-template-columns: repeat(2, auto);
 }

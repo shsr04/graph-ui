@@ -14,3 +14,18 @@ code {
 button, input {
   margin: auto 1em;
 }
+
+@font-face {
+  font-family: 'Heading';
+  src: url('/public/static/Mohave-Bold.ttf') format('woff2');
+}
+
+@font-face {
+  font-family: 'Label';
+  src: url('/public/static/Inter-Regular.ttf') format('woff2');
+}
+
+@font-face {
+  font-family: 'LabelBold';
+  src: url('/public/static/Inter-Bold.ttf') format('woff2');
+}
