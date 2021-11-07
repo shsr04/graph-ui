@@ -45,22 +45,18 @@ function App (): JSX.Element {
 
     return (
         <div className="App">
-            <div className="heading">
+            <div id="heading">
                 <h1>Graph UI</h1>
             </div>
-            <div className="constrained">
-                <div id="left-side">
-                    <EditorWindow onInputGraphs={handleEditorInputGraphs} />
-                    <label>
+            <div id="left-side" className="rows-90-10">
+                <EditorWindow onInputGraphs={handleEditorInputGraphs} />
+                <label className="font-label">
                     Enter graph specification here. Supports a subset of <a href="https://www.graphviz.org/doc/info/lang.html">DOT syntax</a>. (Subgraphs, attributes and ports are not supported.)
-                    </label>
-                </div>
+                </label>
             </div>
-            <div className="constrained">
-                <div id="right-side">
-                    <GraphWindow graphs={Object.values(graphDb).flat()} />
-                    <GraphGenerator onGenerateGraphs={handleRandomInputGraphs} />
-                </div>
+            <div id="right-side" className="rows-90-10">
+                <GraphWindow graphs={Object.values(graphDb).flat()} />
+                <GraphGenerator onGenerateGraphs={handleRandomInputGraphs} />
             </div>
         </div>
     )

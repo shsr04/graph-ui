@@ -4,45 +4,27 @@
   height: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 9fr;
   justify-items: center;
   align-items: center;
 }
 
-.heading {
+#heading {
   grid-column: 1 / span 2;
   font-family: 'Heading';
   font-size: x-large;
 }
-.heading h1 {
+#heading h1 {
   transition: transform 1.5s ease-out, color 2s;
 }
-.heading:hover h1 {
+#heading:hover h1 {
   transform: skew(30deg) rotateZ(3600deg);
   color: red;
 }
 
-.constrained {
-  min-width: 90%;
+.rows-90-10 {
   max-width: 90%;
-  min-height: 90%;
   max-height: 90%;
-}
-
-#left-side {
   display: grid;
   grid-template-rows: 9fr 1fr;
-  row-gap: 1%;
-}
-
-#left-side label {
-  font-family: 'Label';
-  /* This padding is really hacky. Somehow it influences the grid proportions of the editor above */
-  padding: 0.9em;
-}
-
-#right-side {
-  display: grid;
-  grid-template-rows: 9fr 1fr;
-  row-gap: 1%;
+  row-gap: 2%;
 }

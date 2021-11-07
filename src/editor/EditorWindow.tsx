@@ -56,20 +56,19 @@ const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Eleme
     return (
         <>
             <div id="editor-wrapper">
-                <textarea placeholder="Enter graph specification..."
+                <textarea className={`lh-copy ba bw1 ${(parseError != null) ? 'b--dashed b--red' : 'b--black'}`}
+                    placeholder="Enter graph specification..."
                     cols={80} rows={48} autoComplete="off" tabIndex={-1}
                     ref={textAreaRef}
                     value={text}
                     onChange={handleChangeText}
                     onKeyDown={handleKeyDown}
-                    style={{
-                        border: (parseError != null) ? '2px dashed red' : '2px solid black'
-                    }}
                 ></textarea>
 
-                {parseError !== undefined && <div className="full-width">
-                    <pre style={{ whiteSpace: 'pre-wrap' }}>{parseError.message}</pre>
-                </div>}
+                <div>
+                    {parseError !== undefined &&
+                        <pre style={{ whiteSpace: 'pre-wrap' }}>{parseError.message}</pre>}
+                </div>
             </div>
         </>
     )

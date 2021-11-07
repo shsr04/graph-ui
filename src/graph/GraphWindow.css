@@ -6,14 +6,9 @@
 
 #graph-configs {
     display: grid;
-    grid-template-columns: repeat(2, auto);
-    padding: 1em;
+    /* We use a 1/2.5 ratio to align with generator toolbar below */
+    grid-template-columns: 1fr 2.5fr;
     background: hsla(224, 67%, 65%, 0.555);
-    font-family: 'Label';
-}
-
-#graph-configs > label {
-    font-family: 'LabelBold';
 }
 
 #graph-visualizers {

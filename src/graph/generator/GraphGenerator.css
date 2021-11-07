@@ -1,30 +1,23 @@
-input.invalid {
-    border: 1px solid red;
-}
+/*
+So you want equal width columns in CSS Grid, eh?
 
-.errorText {
-    font-weight: bold
-}
+https://twitter.com/wesbos/status/1256229763225657348/photo/1
+https://css-tricks.com/preventing-a-grid-blowout/
+*/
 
 #generator-wrapper {
     display: grid;
-    grid-template-columns: repeat(4, auto);
-    column-gap: 1em;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 0.5fr;
+    column-gap: 1%;
     align-items: center;
     background: hsla(123, 59%, 69%, 0.555);
-    font-family: 'Label';
 }
 
-#generator-wrapper > label {
-    font-family: 'LabelBold';
-}
-
-#generator-wrapper .param {
+ .cols-2 {
     display: grid;
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(2, minmax(0, auto));
 }
 
-#generator-wrapper .errorText {
-    font-weight: bold;
-    grid-column: 1 / span 2;
+.span-2 {
+    grid-column-end: span 2;
 }

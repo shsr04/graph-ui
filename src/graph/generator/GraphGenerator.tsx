@@ -47,26 +47,28 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
     }
 
     return <>
-        <div id="generator-wrapper">
-            <label>
+        <div id="generator-wrapper" className="pa3 font-label">
+            <label className="font-label-bold">
                 Generate random graph
             </label>
 
-            <div className="param">
-                <label>n</label>
-                <input type="text" value={orderInput} onChange={e => handleChangeOrder(e.target.value)} className={orderError !== null ? 'invalid' : ''} />
-                {orderError !== null && <span className="errorText">{orderError}</span>}
+            <div>
+                <div className="cols-2">
+                    <label className="mh1 mt1">n</label>
+                    <input type="text" value={orderInput} onChange={e => handleChangeOrder(e.target.value)} className={orderError !== null ? ' ba bw1 b--red' : ''} />
+                    {orderError !== null && <span className="b span-2">{orderError}</span>}
+                </div>
             </div>
 
-            <div className="param">
-                <label>p</label>
-                <input type="text" value={probabilityInput} onChange={e => handleChangeProbability(e.target.value)} className={probabilityError !== null ? 'invalid' : ''} />
-                {probabilityError !== null && <span className="errorText">{probabilityError}</span>}
+            <div className="cols-2">
+                <label className="mh1 mt1">p</label>
+                <input type="text" value={probabilityInput} onChange={e => handleChangeProbability(e.target.value)} className={probabilityError !== null ? ' ba bw1 b--red' : ''} />
+                {probabilityError !== null && <span className="b span-2">{probabilityError}</span>}
             </div>
 
             <div>
-                <button disabled={orderError !== null || probabilityError !== null} onClick={handleSubmit}>OK</button>
-                <button onClick={handleClear}>Clear</button>
+                <button className="mh1" disabled={orderError !== null || probabilityError !== null} onClick={handleSubmit}>OK</button>
+                <button className="mh1" onClick={handleClear}>Clear</button>
             </div>
         </div>
     </>

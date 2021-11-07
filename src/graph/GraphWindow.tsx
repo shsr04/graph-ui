@@ -116,8 +116,8 @@ const GraphWindow = (props: GraphWindowProps): JSX.Element => {
                 onVisualizeVertexColouring={handleVisualizeVertexColouring}
                 onVisualizeCutvertices={handleVisualizeCutvertices}
             />
-            <div id="graph-configs">
-                <label>Visualizers</label>
+            <div id="graph-configs" className="pa3 font-label">
+                <label className="font-label-bold">Visualizers</label>
                 <div id="graph-visualizers">
                     {
                         visualizers.map(x => {
