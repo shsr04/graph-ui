@@ -1,4 +1,4 @@
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 /**
  * Colours all the vertices in the given graph such that no two adjacent vertices have the same colour.

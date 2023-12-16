@@ -1,4 +1,4 @@
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 /**
  * Extracts the biconnected components from the given graph. #

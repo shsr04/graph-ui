@@ -1,5 +1,5 @@
 import { findBiconnectedComponents } from './BiconnectedComponents'
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 function makeGraph (): Graph {
     const adj = new Map<string, string[]>([

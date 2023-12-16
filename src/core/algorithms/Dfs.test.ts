@@ -1,5 +1,5 @@
 import { dfs, Colour } from './Dfs'
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 describe(dfs.name, () => {
     it('should call functions', () => {

@@ -1,14 +1,14 @@
+import { GraphEditor } from '../core/GraphEditor'
+import { Graph } from '../core/Graph'
+import parseDot, { EdgeStmt, Graph as DotGraph, NodeId, NodeStmt } from 'dotparser'
 import * as d3 from 'd3'
-import { EdgeStmt, Graph as DotGraph, NodeId, NodeStmt } from 'dotparser'
-import { Graph } from '../algorithms/Graph'
 
-export class EdgeWithInvalidVertexError extends Error {
-    message = 'Cannot make an edge from/to a vertex with an unknown ID.'
-
-    constructor (
-        public id: string
-    ) {
-        super()
+export class GraphEditorDotImpl extends GraphEditor {
+    parseInput (input: string): Graph[] {
+        if (input.trim().length === 0) {
+            return []
+        }
+        return parseDot(input).map(mapToGraph)
     }
 }
 
@@ -43,9 +43,13 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
         const targetAdj = adj.get(edge[1]) ?? []
 
         // loops (self-edges) are only allowed in digraphs
-        if (edge[0] !== edge[1] || g.type === 'digraph') { sourceAdj.push(edge[1]) }
+        if (edge[0] !== edge[1] || g.type === 'digraph') {
+            sourceAdj.push(edge[1])
+        }
         // if G is a graph, add the reverse edge
-        if (g.type === 'graph') { targetAdj.push(edge[0]) }
+        if (g.type === 'graph') {
+            targetAdj.push(edge[0])
+        }
 
         adj.set(edge[0], sourceAdj)
         adj.set(edge[1], targetAdj)
@@ -57,4 +61,14 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
     }
 
     return new Graph(i, g.id?.toString() ?? '', g.type === 'digraph', adj)
+}
+
+export class EdgeWithInvalidVertexError extends Error {
+    message = 'Cannot make an edge from/to a vertex with an unknown ID.'
+
+    constructor (
+        public id: string
+    ) {
+        super()
+    }
 }

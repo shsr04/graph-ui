@@ -1,5 +1,5 @@
 import { Colour, dfs } from './Dfs'
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 class ComplexMap<T, U> extends Map<T, U> {
     private readonly map: Map<string, U>

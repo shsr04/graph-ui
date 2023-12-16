@@ -1,11 +1,11 @@
 
 import { ChangeEvent, useCallback, useMemo, useState } from 'react'
-import { visitDfs } from '../algorithms/Dfs'
-import { Graph } from '../algorithms/Graph'
+import { visitDfs } from '../core/algorithms/Dfs'
+import { Graph } from '../core/Graph'
 import GraphSimulation, { SimEdge, SimGraph, SimVertex, VisualizerType } from './GraphSimulation'
 import './GraphWindow.css'
-import { colourVertices } from '../algorithms/VertexColouring'
-import { findBiconnectedComponents } from '../algorithms/BiconnectedComponents'
+import { colourVertices } from '../core/algorithms/VertexColouring'
+import { findBiconnectedComponents } from '../core/algorithms/BiconnectedComponents'
 
 interface GraphWindowProps {
     graphs: Graph[]

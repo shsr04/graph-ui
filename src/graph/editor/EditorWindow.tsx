@@ -1,8 +1,7 @@
-import parseDot, { Graph as DotGraph } from 'dotparser'
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { Graph } from '../algorithms/Graph'
+import { Graph } from '../../core/Graph'
 import './EditorWindow.css'
-import { mapToGraph } from './GraphMapper'
+import { GraphEditor } from '../../core/GraphEditor'
 
 interface DotParserSyntaxError extends Error {
     message: string
@@ -11,34 +10,30 @@ interface DotParserSyntaxError extends Error {
 }
 
 export interface EditorWindowProps {
+    editor: GraphEditor
     onInputGraphs: (graphs: Graph[]) => void
 }
 
-const EditorWindow = ({ onInputGraphs, ...props }: EditorWindowProps): JSX.Element => {
+const EditorWindow = ({ editor, onInputGraphs, ...props }: EditorWindowProps): JSX.Element => {
     // TODO textLines: {content: string, indentation: number, selected: bool}
     const [text, setText] = useState(localStorage.getItem('graphui.editor.codeInput') ?? '')
-    const [parseResult, setParseResult] = useState<DotGraph[]>()
     const [parseError, setParseError] = useState<DotParserSyntaxError>()
     const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
     useEffect(() => {
         if (text.trim().length === 0) {
-            setParseResult([])
+            onInputGraphs([])
+            setParseError(undefined)
             return
         }
+
         try {
-            setParseResult(parseDot(text))
+            onInputGraphs(editor.parseInput(text))
             setParseError(undefined)
         } catch (e) {
             setParseError(e as DotParserSyntaxError)
-            setParseResult(undefined)
         }
-    }, [text])
-
-    useEffect(() => {
-        if (parseResult === undefined) return
-        onInputGraphs(parseResult.map(mapToGraph))
-    }, [parseResult, onInputGraphs])
+    }, [editor, text, onInputGraphs])
 
     function handleChangeText (event: ChangeEvent<HTMLTextAreaElement>): void {
         setText(event.target.value)

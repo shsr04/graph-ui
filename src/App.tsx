@@ -1,9 +1,12 @@
 import { useCallback, useState } from 'react'
-import { Graph } from './algorithms/Graph'
+import { Graph } from './core/Graph'
 import './App.css'
-import EditorWindow from './editor/EditorWindow'
+import EditorWindow from './graph/editor/EditorWindow'
 import GraphGenerator from './graph/generator/GraphGenerator'
 import GraphWindow from './graph/GraphWindow'
+import { GraphUiApplication } from './core/GraphUiApplication'
+import { GraphEditorDotImpl } from './adapters/GraphEditorDotImpl'
+import { RandomGraphGenerator } from './core/RandomGraphGenerator'
 
 interface GraphDatabase { editor: Graph[], random: Graph[] }
 
@@ -35,6 +38,11 @@ function App (): JSX.Element {
     const [graphDb, setGraphDb] = useState<GraphDatabase>(getGraphsFromStorage('graphui.graphs.db') ?? { editor: [], random: [] })
     saveGraphsToStorage('graphui.graphs.db', graphDb)
 
+    const app = new GraphUiApplication(
+        new GraphEditorDotImpl(),
+        new RandomGraphGenerator()
+    )
+
     const handleEditorInputGraphs = useCallback(input => {
         setGraphDb(prev => ({ ...prev, ...{ editor: input } }))
     }, [])
@@ -49,14 +57,14 @@ function App (): JSX.Element {
                 <h1>Graph UI</h1>
             </div>
             <div id="left-side" className="rows-90-10">
-                <EditorWindow onInputGraphs={handleEditorInputGraphs} />
+                <EditorWindow editor={app.editor} onInputGraphs={handleEditorInputGraphs} />
                 <label className="font-label">
                     Enter graph specification here. Supports a subset of <a href="https://www.graphviz.org/doc/info/lang.html">DOT syntax</a>. (Subgraphs, attributes and ports are not supported.)
                 </label>
             </div>
             <div id="right-side" className="rows-90-10">
                 <GraphWindow graphs={Object.values(graphDb).flat()} />
-                <GraphGenerator onGenerateGraphs={handleRandomInputGraphs} />
+                <GraphGenerator generator={app.generator} onGenerateGraphs={handleRandomInputGraphs} />
             </div>
         </div>
     )

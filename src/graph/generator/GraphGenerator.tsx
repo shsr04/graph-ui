@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Graph } from '../../algorithms/Graph'
-import { generateGraph } from '../../algorithms/GraphGenerator'
+import { Graph } from '../../core/Graph'
 import './GraphGenerator.css'
+import { RandomGraphGenerator } from '../../core/RandomGraphGenerator'
 
 interface GraphGeneratorProps {
+    generator: RandomGraphGenerator
     onGenerateGraphs: (graph: Graph[]) => void
 }
 
@@ -38,7 +39,7 @@ const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {
     }
 
     function handleSubmit (): void {
-        const g = generateGraph(order, probability, 100, u => u.toString())
+        const g = props.generator.generateGraph(order, probability, 100, u => u.toString())
         props.onGenerateGraphs([g])
     }
 

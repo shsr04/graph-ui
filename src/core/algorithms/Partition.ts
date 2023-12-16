@@ -1,5 +1,5 @@
 import { dfs } from './Dfs'
-import { Graph } from './Graph'
+import { Graph } from '../Graph'
 
 /**
  * Checks if the given graph is bipartite. If so, decomposes its vertices into two partition classes.

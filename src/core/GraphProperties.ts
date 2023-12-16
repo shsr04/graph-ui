@@ -1,8 +1,8 @@
-import { dfs } from './Dfs'
+import { dfs } from './algorithms/Dfs'
 import { Graph } from './Graph'
-import { decomposeBipartite } from './Partition'
-import { colourVertices } from './VertexColouring'
-import { findBiconnectedComponents } from './BiconnectedComponents'
+import { decomposeBipartite } from './algorithms/Partition'
+import { colourVertices } from './algorithms/VertexColouring'
+import { findBiconnectedComponents } from './algorithms/BiconnectedComponents'
 
 export interface GraphProperties {
     /**
@@ -10,6 +10,9 @@ export interface GraphProperties {
      */
     isConnected: boolean
 
+    /**
+     * A graph is biconnected if any two vertices are linked by two distinct paths.
+     */
     isBiconnected: boolean
 
     /**
@@ -103,8 +106,6 @@ export interface GraphProperties {
 
     /**
      * TODO:
-     * - colourable?
-     * - biconnected
      * - planar
      * - graceful (Gallian, 2018) (https://mathworld.wolfram.com/GracefulGraph.html)
      * - platonic
@@ -209,7 +210,7 @@ function isBiconnected<T> (g: Graph<T>): boolean {
 }
 
 function isPlanar<T> (g: Graph<T>): boolean {
-    // return checkPlanarity(g)
+    // TODO: return checkPlanarity(g)
     return false
 }
 
