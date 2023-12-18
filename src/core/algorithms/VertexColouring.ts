@@ -8,12 +8,12 @@ import { Graph } from '../Graph'
  * The total number of used colours is k <= D(G)+1 where D(G) is the maximum degree in the graph.
  */
 export function colourVertices<T> (g: Graph<T>, root?: T): Map<T, number> {
-    if (g.order() < 2) {
-        return new Map(g.vertices().map(u => [u, 0]))
+    if (g.order < 2) {
+        return new Map(g.vertices.map(u => [u, 0]))
     }
 
     // Sort vertices by degree (in descending order)
-    const ordering = [...g.vertices()]
+    const ordering = [...g.vertices]
     ordering.sort((u, v) => g.deg(v) - g.deg(u))
 
     const maxDegree = g.deg(ordering[0])

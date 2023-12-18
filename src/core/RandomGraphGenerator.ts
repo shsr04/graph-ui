@@ -1,4 +1,4 @@
-import { Graph } from './Graph'
+import { AdjacencyGraph } from './AdjacencyGraph'
 
 export class RandomGraphGenerator {
     /**
@@ -8,7 +8,7 @@ export class RandomGraphGenerator {
      * @param graphId Unique ID for the graph
      * @param vertexIdGenerator Function which generates a unique vertex ID from the given integer
      */
-    public generateGraph<T>(n: number, p: number, graphId: number, vertexIdGenerator: (i: number) => T): Graph<T> {
+    public generateGraph<T>(n: number, p: number, graphId: number, vertexIdGenerator: (i: number) => T): AdjacencyGraph<T> {
         const directed = false
 
         let adjMap = new Map<T, T[]>(Array.from(Array(n).keys()).map(i => [vertexIdGenerator(i), []]))
@@ -35,6 +35,6 @@ export class RandomGraphGenerator {
             )
         }
 
-        return new Graph(graphId, 'random', directed, adjMap)
+        return new AdjacencyGraph(graphId, 'random', directed, adjMap)
     }
 }

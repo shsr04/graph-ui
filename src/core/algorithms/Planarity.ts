@@ -1,5 +1,5 @@
 import { Colour, dfs } from './Dfs'
-import { Graph } from '../Graph'
+import { AdjacencyGraph } from '../AdjacencyGraph'
 
 class ComplexMap<T, U> extends Map<T, U> {
     private readonly map: Map<string, U>
@@ -27,12 +27,12 @@ class ComplexMap<T, U> extends Map<T, U> {
     }
 }
 
-export function checkPlanarity<T> (g: Graph<T>): boolean {
+export function checkPlanarity<T> (g: AdjacencyGraph<T>): boolean {
     if (g.directed) {
         throw Error('Planarity check is not implemented for directed graphs')
     }
 
-    if (g.order() > 2 && g.size() > 3 * g.order() - 6) {
+    if (g.order > 2 && g.size > 3 * g.order - 6) {
         console.log('--- The input graph is not planar. ---')
         return false
     }
@@ -53,7 +53,7 @@ export function checkPlanarity<T> (g: Graph<T>): boolean {
     // TODO test
 }
 
-function computeNestingDepth<T> (g: Graph<T>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, lowpt2: ComplexMap<[T, number], number>, nestingDepth: Map<[T, number], number>): void {
+function computeNestingDepth<T> (g: AdjacencyGraph<T>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, lowpt2: ComplexMap<[T, number], number>, nestingDepth: Map<[T, number], number>): void {
     type EdgeType = 'tree' | 'back'
     interface TreeAdj {
         target: T
@@ -135,8 +135,8 @@ function isConflicting<T> (interval: EdgeInterval<T> | undefined, edge: [T, numb
     return lowpt.extract(interval.high) > lowpt.extract(edge)
 }
 
-function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number], number>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, conflictStack: Array<ConflictPair<T>>, stackBottom: ComplexMap<[T, number], ConflictPair<T> | null>): boolean {
-    const colour: ComplexMap<T, Colour> = new ComplexMap(g.vertices().map(x => [x, 'white']))
+function checkLRPartition<T> (g: AdjacencyGraph<T>, nestingDepth: ComplexMap<[T, number], number>, height: ComplexMap<T, number>, lowpt: ComplexMap<[T, number], number>, conflictStack: Array<ConflictPair<T>>, stackBottom: ComplexMap<[T, number], ConflictPair<T> | null>): boolean {
+    const colour: ComplexMap<T, Colour> = new ComplexMap(g.vertices.map(x => [x, 'white']))
     // For each edge e, stores the first return edge f to its lowpoint u with lowpt(e) = height(u)
     const lowptEdge: ComplexMap<[T, number], [T, number]> = new ComplexMap()
     // For each edge e, stores the orientation
@@ -328,7 +328,7 @@ function checkLRPartition<T> (g: Graph<T>, nestingDepth: ComplexMap<[T, number],
         conflictStack.push(top)
     }
 
-    for (const u of g.vertices()) {
+    for (const u of g.vertices) {
         if (height.extract(u) > 0) {
             continue
         }

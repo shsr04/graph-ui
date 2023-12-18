@@ -1,9 +1,18 @@
 import * as d3 from 'd3'
-import { DEFAULT_CIRCLE_FILL_COLOR, DEFAULT_CIRCLE_STROKE_DASHARRAY, DEFAULT_CIRCLE_STROKE_WIDTH, SECONDARY_CIRCLE_FILL_COLOR, SECONDARY_CIRCLE_STROKE_DASHARRAY, SECONDARY_CIRCLE_STROKE_WIDTH, SimGraph, SimVertex, VisualizerType } from '../GraphSimulation'
+import {
+    DEFAULT_CIRCLE_FILL_COLOR,
+    DEFAULT_CIRCLE_STROKE_DASHARRAY,
+    DEFAULT_CIRCLE_STROKE_WIDTH,
+    SECONDARY_CIRCLE_FILL_COLOR,
+    SECONDARY_CIRCLE_STROKE_DASHARRAY,
+    SECONDARY_CIRCLE_STROKE_WIDTH,
+    VisualizerType
+} from '../GraphSimulation'
+import { D3Graph, D3Vertex } from '../../adapters/D3Graph'
 
 export function CutvertexVisualizer (
-    selection: d3.Selection<SVGCircleElement, SimVertex, d3.BaseType, unknown>,
-    graph: SimGraph,
+    selection: d3.Selection<SVGCircleElement, D3Vertex, d3.BaseType, unknown>,
+    graph: D3Graph,
     cutvertexFactory: (graphId: number, root: string) => string[]
 ): void {
     selection

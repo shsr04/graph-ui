@@ -1,5 +1,5 @@
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { Graph } from '../../core/Graph'
+import { AdjacencyGraph } from '../../core/AdjacencyGraph'
 import './EditorWindow.css'
 import { GraphEditor } from '../../core/GraphEditor'
 
@@ -11,7 +11,7 @@ interface DotParserSyntaxError extends Error {
 
 export interface EditorWindowProps {
     editor: GraphEditor
-    onInputGraphs: (graphs: Graph[]) => void
+    onInputGraphs: (graphs: AdjacencyGraph[]) => void
 }
 
 const EditorWindow = ({ editor, onInputGraphs, ...props }: EditorWindowProps): JSX.Element => {

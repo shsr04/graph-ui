@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
-import { SimGraph, SimVertex } from '../GraphSimulation'
+import { D3Graph, D3Vertex } from '../../adapters/D3Graph'
 
-export function TooltipVisualizer (selection: d3.Selection<SVGCircleElement, SimVertex, d3.BaseType, unknown>, svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown>, graph: SimGraph): void {
+export function TooltipVisualizer (selection: d3.Selection<SVGCircleElement, D3Vertex, d3.BaseType, unknown>, svg: d3.Selection<SVGSVGElement, unknown, d3.BaseType, unknown>, graph: D3Graph): void {
     selection
         .on('mousemove.tooltip', function (event) {
             const lines = graph.tooltip.split(/\r?\n/).map(x => x.trim())

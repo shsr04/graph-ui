@@ -15,13 +15,14 @@ export interface DfsFunctions<T> {
 /**
  * Runs a depth-first search on the given graph. (Hopcroft, Tarjan)
  * @param g Input graph
+ * @param f Functions to execute at certain discovery steps during the algorithm
  * @returns The predecessor map of the graph. For any vertex u, the predecessor map contains u's predecessor in the graph.
  * If u is the root vertex of a spanning tree, its predecessor entry is null.
  */
 export function dfs<T> (g: Graph<T>, f?: DfsFunctions<T>): Map<T, T | null> {
-    const colour: Map<T, Colour> = new Map(g.vertices().map(u => ([u, 'white'])))
-    const predecessor: Map<T, T | null> = new Map(g.vertices().map(u => ([u, null])))
-    for (const u of g.vertices()) {
+    const colour: Map<T, Colour> = new Map(g.vertices.map(u => ([u, 'white'])))
+    const predecessor: Map<T, T | null> = new Map(g.vertices.map(u => ([u, null])))
+    for (const u of g.vertices) {
         if (colour.get(u) !== 'white') continue
         visitDfs(g, u, colour, predecessor, f)
     }

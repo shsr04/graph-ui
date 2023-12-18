@@ -1,7 +1,7 @@
 import { findBiconnectedComponents } from './BiconnectedComponents'
-import { Graph } from '../Graph'
+import { AdjacencyGraph } from '../AdjacencyGraph'
 
-function makeGraph (): Graph {
+function makeGraph (): AdjacencyGraph {
     const adj = new Map<string, string[]>([
         ['1', ['2', '5', '6', '7']],
         ['2', ['1', '3', '4', '5']],
@@ -14,7 +14,7 @@ function makeGraph (): Graph {
         ['8', ['7', '9']],
         ['9', ['7', '8']]
     ])
-    return new Graph(0, 'test', false, adj)
+    return new AdjacencyGraph(0, 'test', false, adj)
 }
 
 describe(findBiconnectedComponents.name, () => {

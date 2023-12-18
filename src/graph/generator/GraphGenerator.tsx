@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Graph } from '../../core/Graph'
+import { AdjacencyGraph } from '../../core/AdjacencyGraph'
 import './GraphGenerator.css'
 import { RandomGraphGenerator } from '../../core/RandomGraphGenerator'
 
 interface GraphGeneratorProps {
     generator: RandomGraphGenerator
-    onGenerateGraphs: (graph: Graph[]) => void
+    onGenerateGraphs: (graph: AdjacencyGraph[]) => void
 }
 
 const GraphGenerator = (props: GraphGeneratorProps): JSX.Element => {

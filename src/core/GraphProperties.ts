@@ -1,8 +1,8 @@
 import { dfs } from './algorithms/Dfs'
-import { Graph } from './Graph'
 import { decomposeBipartite } from './algorithms/Partition'
 import { colourVertices } from './algorithms/VertexColouring'
 import { findBiconnectedComponents } from './algorithms/BiconnectedComponents'
+import { Graph } from './Graph'
 
 export interface GraphProperties {
     /**
@@ -144,7 +144,7 @@ function isTree<T> (g: Graph<T>): boolean {
 }
 
 function isCycle<T> (g: Graph<T>): boolean {
-    return g.vertices().every(u => g.deg(u) === 2)
+    return g.vertices.every(u => g.deg(u) === 2)
 }
 
 function isBipartite<T> (g: Graph<T>): boolean {
@@ -157,7 +157,7 @@ function isCompleteBipartite<T> (g: Graph<T>): boolean {
         return false
     }
     // A complete bipartite graph K[p,q] has m = p*q edges.
-    return g.size() === partitions[0].length * partitions[1].length
+    return g.size === partitions[0].length * partitions[1].length
 }
 
 function isStar<T> (g: Graph<T>): boolean {
@@ -172,27 +172,27 @@ function isStar<T> (g: Graph<T>): boolean {
 }
 
 function isComplete<T> (g: Graph<T>): boolean {
-    const n = g.order()
-    const m = g.size()
+    const n = g.order
+    const m = g.size
     return m === n * (n - 1) / 2
 }
 
 function isEulerian<T> (g: Graph<T>): boolean {
     // A connected graph is Eulerian if and only if every vertex has even degree.
-    return isConnected(g) && g.vertices().every(u => g.deg(u) % 2 === 0)
+    return isConnected(g) && g.vertices.every(u => g.deg(u) % 2 === 0)
 }
 
 function isWheel<T> (g: Graph<T>): boolean {
-    if (g.order() < 4) return false
+    if (g.order < 4) return false
     // Unverified: is it sufficient to check the degrees?
-    const degreesDesc = g.vertices().map(u => g.deg(u)).sort((u, v) => v - u)
-    return degreesDesc[0] === g.order() - 1 && degreesDesc.slice(1).every(x => x === 3)
+    const degreesDesc = g.vertices.map(u => g.deg(u)).sort((u, v) => v - u)
+    return degreesDesc[0] === g.order - 1 && degreesDesc.slice(1).every(x => x === 3)
 }
 
 function isGear<T> (g: Graph<T>): boolean {
-    if (g.order() < 7) return false
+    if (g.order < 7) return false
     // Unverified: is it sufficient to check the degree/size?
-    return isBipartite(g) && Array.from(Array(10).keys()).some(n => g.order() === 2 * n + 1 && g.size() === 3 * n)
+    return isBipartite(g) && Array.from(Array(10).keys()).some(n => g.order === 2 * n + 1 && g.size === 3 * n)
 }
 
 function colourability<T> (g: Graph<T>): number {

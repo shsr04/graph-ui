@@ -1,5 +1,5 @@
-import { dfs, Colour } from './Dfs'
-import { Graph } from '../Graph'
+import { Colour, dfs } from './Dfs'
+import { AdjacencyGraph } from '../AdjacencyGraph'
 
 describe(dfs.name, () => {
     it('should call functions', () => {
@@ -9,7 +9,7 @@ describe(dfs.name, () => {
             [2, [1]],
             [3, [1]]
         ])
-        const g = new Graph(0, 'input', false, adj)
+        const g = new AdjacencyGraph(0, 'input', false, adj)
 
         const expectedCalls: Array<[u: number, k: number, colour: Colour]> = [
             [0, 0, 'white'],
@@ -25,7 +25,7 @@ describe(dfs.name, () => {
                 index++
             }
         })
-        expect(index).toEqual(g.edges().length)
+        expect(index).toEqual(g.edges.length)
     })
 
     it('should find graph components', () => {
@@ -38,7 +38,7 @@ describe(dfs.name, () => {
             [11, [10, 12]],
             [12, [10, 11]]
         ])
-        const g = new Graph(0, 'input', false, adj)
+        const g = new AdjacencyGraph(0, 'input', false, adj)
 
         const predecessor = dfs(g)
         const rootVertices = Array.from(predecessor.entries()).filter(([_, p]) => p === null).map(x => x[0])

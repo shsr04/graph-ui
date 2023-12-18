@@ -1,10 +1,10 @@
 import { GraphEditor } from '../core/GraphEditor'
-import { Graph } from '../core/Graph'
+import { AdjacencyGraph } from '../core/AdjacencyGraph'
 import parseDot, { EdgeStmt, Graph as DotGraph, NodeId, NodeStmt } from 'dotparser'
 import * as d3 from 'd3'
 
 export class GraphEditorDotImpl extends GraphEditor {
-    parseInput (input: string): Graph[] {
+    parseInput (input: string): AdjacencyGraph[] {
         if (input.trim().length === 0) {
             return []
         }
@@ -12,7 +12,7 @@ export class GraphEditorDotImpl extends GraphEditor {
     }
 }
 
-export function mapToGraph (g: DotGraph, i: number): Graph {
+export function mapToGraph (g: DotGraph, i: number): AdjacencyGraph {
     const vertices = g.children
         .filter(child => child.type === 'node_stmt')
         .map(u => (u as NodeStmt).node_id.id.toString())
@@ -60,7 +60,7 @@ export function mapToGraph (g: DotGraph, i: number): Graph {
         adj = new Map(Array.from(adj.entries()).map(([vertex, adjList]) => ([vertex, Array.from(new Set(adjList))])))
     }
 
-    return new Graph(i, g.id?.toString() ?? '', g.type === 'digraph', adj)
+    return new AdjacencyGraph(i, g.id?.toString() ?? '', g.type === 'digraph', adj)
 }
 
 export class EdgeWithInvalidVertexError extends Error {

@@ -4,23 +4,7 @@ import { SpanningTreeVisualizer } from './visualizers/SpanningTreeVisualizer'
 import { TooltipVisualizer } from './visualizers/TooltipVisualizer'
 import { VertexColouringVisualizer } from './visualizers/VertexColouringVisualizer'
 import { CutvertexVisualizer } from './visualizers/CutvertexVisualizer'
-
-export interface SimGraph {
-    id: number
-    name: string
-    vertices: SimVertex[]
-    edges: SimEdge[]
-    edgeType: 'line' | 'arrow'
-    tooltip: string
-}
-
-export interface SimVertex extends d3.SimulationNodeDatum {
-    id: number | string
-    graphId: number
-    radius: number
-}
-
-export interface SimEdge extends d3.SimulationLinkDatum<SimVertex> { }
+import { D3Edge, D3Graph, D3Vertex } from '../adapters/D3Graph'
 
 export enum VisualizerType {
     tooltip = 'tooltip',
@@ -51,7 +35,7 @@ const SIMULATION_ALPHA_SETTINGS = {
 }
 
 interface GraphSimulationProps {
-    graphs: SimGraph[]
+    graphs: D3Graph[]
     visualizers: VisualizerType[]
     onVisualizeSpanningTree: (graphId: number, rootVertex: string) => Array<[string, string]>
     onVisualizeVertexColouring: (graphId: number, rootVertex: string) => Map<string, number>
@@ -63,9 +47,14 @@ interface GraphSimulationProps {
  *
  * Adapted from https://reactfordataviz.com/articles/force-directed-graphs-with-react-and-d3v7/
  */
-const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, onVisualizeCutvertices, ...props }: GraphSimulationProps): JSX.Element => {
+const GraphSimulation = ({
+    onVisualizeSpanningTree,
+    onVisualizeVertexColouring,
+    onVisualizeCutvertices,
+    ...props
+}: GraphSimulationProps): JSX.Element => {
     const svgRef = useRef<SVGSVGElement>(null)
-    const [simulation, setSimulation] = useState<d3.Simulation<SimVertex, SimEdge>>(d3.forceSimulation())
+    const [simulation, setSimulation] = useState<d3.Simulation<D3Vertex, D3Edge>>(d3.forceSimulation())
 
     useEffect(() => {
         if (svgRef.current === null) return
@@ -73,12 +62,12 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         const vertices = props.graphs.flatMap(g => g.vertices)
         const edges = props.graphs.flatMap(g => g.edges)
 
-        const simulation = d3.forceSimulation<SimVertex, SimEdge>()
+        const simulation = d3.forceSimulation<D3Vertex, D3Edge>()
             .nodes(vertices)
             .force('center', d3.forceCenter(0, 0).strength(0.1))
             .force('charge', d3.forceManyBody().strength(-100))
             .force('collision', d3.forceCollide(node => node.radius * 1.5))
-            .force('links', d3.forceLink<SimVertex, SimEdge>().id(vertex => vertex.id).links(edges))
+            .force('links', d3.forceLink<D3Vertex, D3Edge>().id(vertex => vertex.id).links(edges))
             // hack: Somehow d3 completely kills the simulation when alpha < alphaMin, so we need to keep it running continuously...
             .alpha(SIMULATION_ALPHA_SETTINGS.base)
             .alphaTarget(SIMULATION_ALPHA_SETTINGS.target)
@@ -105,7 +94,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
                     if (!graphIds.includes(num)) {
                         return true
                     }
-                } catch (e: any) {}
+                } catch (e: any) {
+                }
                 return false
             })
             .forEach(elem => {
@@ -120,7 +110,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         })
     }, [simulation, props.graphs, handleDraw])
 
-    function drawSimulatedGraph (graph: SimGraph, simulation: d3.Simulation<SimVertex, SimEdge>, colorCode: string): void {
+    function drawSimulatedGraph (graph: D3Graph, simulation: d3.Simulation<D3Vertex, D3Edge>, colorCode: string): void {
         if (svgRef.current === null) return
 
         const svg = d3.select(svgRef.current)
@@ -133,20 +123,20 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         const linkGroup = svg.selectAll(`#links-${id}`).data([null]).join('g').attr('id', `links-${id}`)
         const nodeGroup = svg.selectAll(`#nodes-${id}`).data([null]).join('g').attr('id', `nodes-${id}`)
 
-        const edges = linkGroup.selectAll<SVGLineElement, SimEdge>('line')
+        const edges = linkGroup.selectAll<SVGLineElement, D3Edge>('line')
             .data(e)
             .join('line')
-            .attr('x1', e => (e.source as SimVertex).x ?? null)
-            .attr('y1', e => (e.source as SimVertex).y ?? null)
-            .attr('x2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex, graph.edgeType === 'arrow').x)
-            .attr('y2', e => intersectionWithCircle(e.source as SimVertex, e.target as SimVertex, graph.edgeType === 'arrow').y)
+            .attr('x1', e => (e.source as D3Vertex).x ?? null)
+            .attr('y1', e => (e.source as D3Vertex).y ?? null)
+            .attr('x2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex, graph.edgeType === 'arrow').x)
+            .attr('y2', e => intersectionWithCircle(e.source as D3Vertex, e.target as D3Vertex, graph.edgeType === 'arrow').y)
             .attr('stroke', 'black')
             .attr('stroke-width', function () {
                 return this.getAttribute('stroke-width') ?? DEFAULT_LINE_STROKE_WIDTH
             })
             .attr('marker-end', () => graph.edgeType === 'arrow' ? 'url(#arrowTip)' : '')
 
-        const vertices = nodeGroup.selectAll<SVGCircleElement, SimVertex>('circle.vertex')
+        const vertices = nodeGroup.selectAll<SVGCircleElement, D3Vertex>('circle.vertex')
             .data(v)
             .join('circle')
             .attr('class', 'vertex')
@@ -178,7 +168,7 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
             vertices.call(TooltipVisualizer, svg, graph)
         }
 
-        nodeGroup.selectAll<SVGTextElement, SimVertex>('text.label')
+        nodeGroup.selectAll<SVGTextElement, D3Vertex>('text.label')
             .data(v)
             .join('text')
             .attr('class', 'label')
@@ -197,7 +187,10 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
      * @param respectArrow True if the distance should consider additional space for an arrow tip (used in digraphs)
      * @returns The coordinate where a line drawn from the source vertex intersects with the border of the target vertex.
      */
-    function intersectionWithCircle (source: SimVertex, target: SimVertex, respectArrow: boolean = false): { x: number, y: number } {
+    function intersectionWithCircle (source: D3Vertex, target: D3Vertex, respectArrow: boolean = false): {
+        x: number
+        y: number
+    } {
         if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) throw Error('INTERNAL ERROR: source/target is undefined')
         if (source === target) return { x: source.x, y: source.y }
         const distanceCenter = Math.sqrt(Math.pow(target.x - source.x, 2) + Math.pow(target.y - source.y, 2))
@@ -213,8 +206,8 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
         return { x: source.x + deltaX, y: source.y + deltaY }
     }
 
-    function handleDrag (simulation: d3.Simulation<SimVertex, SimEdge>): d3.DragBehavior<SVGCircleElement, SimVertex, SimVertex | d3.SubjectPosition> {
-        return d3.drag<SVGCircleElement, SimVertex>()
+    function handleDrag (simulation: d3.Simulation<D3Vertex, D3Edge>): d3.DragBehavior<SVGCircleElement, D3Vertex, D3Vertex | d3.SubjectPosition> {
+        return d3.drag<SVGCircleElement, D3Vertex>()
             .on('start', (event) => {
                 if (event.active > 0) return
                 // Set up some dynamic behaviour
@@ -245,14 +238,15 @@ const GraphSimulation = ({ onVisualizeSpanningTree, onVisualizeVertexColouring, 
 
     return (
         <>
-            <svg width="100%" height="100%" ref={svgRef} viewBox={`-${svgBoundingRect.w / 2} -${svgBoundingRect.h / 2} ${svgBoundingRect.w} ${svgBoundingRect.h}`}>
+            <svg width="100%" height="100%" ref={svgRef}
+                viewBox={`-${svgBoundingRect.w / 2} -${svgBoundingRect.h / 2} ${svgBoundingRect.w} ${svgBoundingRect.h}`}>
                 <defs>
                     <marker id="arrowTip" viewBox="0 0 10 10" refX="5" refY="5"
                         markerWidth={arrowTipSize} markerHeight={arrowTipSize}
                         markerUnits="userSpaceOnUse"
                         orient="auto-start-reverse"
                     >
-                        <path d="M 0 0 L 10 5 L 0 10 z" />
+                        <path d="M 0 0 L 10 5 L 0 10 z"/>
                     </marker>
                 </defs>
             </svg>

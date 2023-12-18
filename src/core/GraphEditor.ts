@@ -1,5 +1,5 @@
-import { Graph } from './Graph'
+import { AdjacencyGraph } from './AdjacencyGraph'
 
 export abstract class GraphEditor {
-    abstract parseInput (input: string): Graph[]
+    abstract parseInput (input: string): AdjacencyGraph[]
 }

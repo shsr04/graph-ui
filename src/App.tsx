@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Graph } from './core/Graph'
+import { AdjacencyGraph } from './core/AdjacencyGraph'
 import './App.css'
 import EditorWindow from './graph/editor/EditorWindow'
 import GraphGenerator from './graph/generator/GraphGenerator'
@@ -8,7 +8,7 @@ import { GraphUiApplication } from './core/GraphUiApplication'
 import { GraphEditorDotImpl } from './adapters/GraphEditorDotImpl'
 import { RandomGraphGenerator } from './core/RandomGraphGenerator'
 
-interface GraphDatabase { editor: Graph[], random: Graph[] }
+interface GraphDatabase { editor: AdjacencyGraph[], random: AdjacencyGraph[] }
 
 function getGraphsFromStorage (key: string): GraphDatabase | null {
     const storedDb = localStorage.getItem(key)
@@ -17,7 +17,7 @@ function getGraphsFromStorage (key: string): GraphDatabase | null {
         const data = JSON.parse(storedDb)
         const result: any = {}
         for (const key of ['editor', 'random']) {
-            result[key] = data[key].map((x: any) => Graph.fromJSON(x))
+            result[key] = data[key].map((x: any) => AdjacencyGraph.fromJSON(x))
         }
         return result as GraphDatabase
     } catch (e: any) {

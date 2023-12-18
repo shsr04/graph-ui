@@ -27,7 +27,7 @@ export function findBiconnectedComponents<T> (g: Graph<T>, root?: T): [Set<T>, A
     const edges: Array<[T, T]> = []
     const components: Array<Array<[T, T]>> = []
 
-    const vertices = root === undefined ? g.vertices() : [root]
+    const vertices = root === undefined ? g.vertices : [root]
     for (const u of vertices) {
         if (discovery.has(u)) continue
         visitBiconnect(g, u, null, discovery, discoveryIndex, lowpt, edges, components)

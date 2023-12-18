@@ -1,5 +1,5 @@
 import { EdgeStmt, Graph as DotGraph, NodeStmt } from 'dotparser'
-import { Graph } from '../core/Graph'
+import { AdjacencyGraph } from '../core/AdjacencyGraph'
 import { mapToGraph } from './GraphEditorDotImpl'
 
 function makeNode (id: string | number): NodeStmt {
@@ -38,7 +38,7 @@ describe('GraphEditorDotImpl', () => {
             ['7', ['8', '4']],
             ['8', ['7']]
         ])
-        const expected = new Graph(0, '', false, expectedAdj)
+        const expected = new AdjacencyGraph(0, '', false, expectedAdj)
 
         expect(mapToGraph(g, 0)).toEqual(expected)
     })

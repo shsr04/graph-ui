@@ -1,10 +1,17 @@
 import * as d3 from 'd3'
-import { BOLD_LINE_STROKE_WIDTH, DEFAULT_CIRCLE_FILL_COLOR, DEFAULT_LINE_STROKE_WIDTH, FOCUSED_CIRCLE_FILL_COLOR, SimEdge, SimGraph, SimVertex } from '../GraphSimulation'
+import {
+    BOLD_LINE_STROKE_WIDTH,
+    DEFAULT_CIRCLE_FILL_COLOR,
+    DEFAULT_LINE_STROKE_WIDTH,
+    FOCUSED_CIRCLE_FILL_COLOR,
+    SimVertex
+} from '../GraphSimulation'
+import { D3Edge, D3Graph, D3Vertex } from '../../adapters/D3Graph'
 
 export function SpanningTreeVisualizer (
-    selection: d3.Selection<SVGCircleElement, SimVertex, d3.BaseType, unknown>,
-    graph: SimGraph,
-    edgeSelection: d3.Selection<SVGLineElement, SimEdge, d3.BaseType, unknown>,
+    selection: d3.Selection<SVGCircleElement, D3Vertex, d3.BaseType, unknown>,
+    graph: D3Graph,
+    edgeSelection: d3.Selection<SVGLineElement, D3Edge, d3.BaseType, unknown>,
     spanningTreeFactory: (graphId: number, root: string) => Array<[string, string]>
 ): void {
     selection
