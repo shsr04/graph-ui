@@ -3,8 +3,7 @@ import {
     BOLD_LINE_STROKE_WIDTH,
     DEFAULT_CIRCLE_FILL_COLOR,
     DEFAULT_LINE_STROKE_WIDTH,
-    FOCUSED_CIRCLE_FILL_COLOR,
-    SimVertex
+    FOCUSED_CIRCLE_FILL_COLOR
 } from '../GraphSimulation'
 import { D3Edge, D3Graph, D3Vertex } from '../../adapters/D3Graph'
 
@@ -21,7 +20,7 @@ export function SpanningTreeVisualizer (
             })
             const edges = spanningTreeFactory(graph.id, vertex.id.toString())
             edgeSelection.attr('stroke-width', function (e) {
-                if (edges.some(([u, v]) => u === (e.source as SimVertex).id.toString() && v === (e.target as SimVertex).id.toString())) {
+                if (edges.some(([u, v]) => u === (e.source as D3Vertex).id.toString() && v === (e.target as D3Vertex).id.toString())) {
                     return BOLD_LINE_STROKE_WIDTH
                 }
                 return this.getAttribute('stroke-width')
