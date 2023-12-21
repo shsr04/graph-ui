@@ -154,6 +154,7 @@ function checkLRPartition<T> (g: AdjacencyGraph<T>, nestingDepth: ComplexMap<[T,
      * If null, the algorithm was inconclusive. This should never happen and indicates an implementation error.
      */
     function visit (u: T, parent: T | null): boolean {
+        console.debug(`visit: u=${u}, parent=${parent}`)
         colour.set(u, 'grey')
         const sortedEdges = Array.from(Array(g.deg(u)).keys()).sort((x, y) => nestingDepth.extract([u, x]) - nestingDepth.extract([u, y]))
         for (const k of sortedEdges) {
@@ -289,12 +290,14 @@ function checkLRPartition<T> (g: AdjacencyGraph<T>, nestingDepth: ComplexMap<[T,
     function trimBackEdges (parent: T): void {
         // Remove the back edges which end at parent from the stack
         while (conflictStack.length > 0 && getLowestPoint(conflictStack[conflictStack.length - 1], lowpt) === height.extract(parent)) {
+            console.debug(`trimBackEdges(${parent}): removing back edge, conflictStack = ${JSON.stringify(conflictStack)}`)
             const top = conflictStack.pop()
             if (top?.left?.low !== undefined) {
                 side.set(top.left.low, -1)
             }
         }
 
+        console.debug(`trimBackEdges(${parent}): conflictStack = ${JSON.stringify(conflictStack)}`)
         if (conflictStack.length === 0) {
             return
         }

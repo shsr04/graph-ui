@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { AdjacencyGraph } from './core/AdjacencyGraph'
 import './App.css'
 import EditorWindow from './graph/editor/EditorWindow'
@@ -38,10 +38,10 @@ function App (): JSX.Element {
     const [graphDb, setGraphDb] = useState<GraphDatabase>(getGraphsFromStorage('graphui.graphs.db') ?? { editor: [], random: [] })
     saveGraphsToStorage('graphui.graphs.db', graphDb)
 
-    const app = new GraphUiApplication(
+    const app = useMemo(() => new GraphUiApplication(
         new GraphEditorDotImpl(),
         new RandomGraphGenerator()
-    )
+    ), [])
 
     const handleEditorInputGraphs = useCallback(input => {
         setGraphDb(prev => ({ ...prev, ...{ editor: input } }))
