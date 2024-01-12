@@ -15,7 +15,7 @@ export function checkPlanarity<T> (g: Graph<T>): boolean {
     }
 
     if (g.order > 2 && g.size > 3 * g.order - 6) {
-        console.log('The input graph has \'m > 3 * n - 6\' => not planar')
+        console.log("The input graph has 'm > 3 * n - 6' => not planar")
         return false
     }
 
@@ -36,8 +36,15 @@ export function checkPlanarity<T> (g: Graph<T>): boolean {
 }
 
 class NumberedGraph<T> {
+    /**
+     * Numbering (`i`)
+     */
     private readonly numbers = new Map<T, number>()
-    private readonly types = new Map<T, 'leaf'|'internal'>()
+    private readonly dfsOrder = new Array<T>()
+    private readonly types = new Map<T, 'root'|'internal'|'leaf'>()
+    /**
+     * Labels (`B`)
+     */
     private readonly labels = new Map<T, number>()
 
     constructor (
@@ -48,10 +55,11 @@ class NumberedGraph<T> {
         dfs(graph, {
             preprocess: u => {
                 this.numbers.set(u, index)
+                this.dfsOrder.push(u)
                 index++
             },
             postprocess: u => {
-                const maxNeighbour = Math.max(...graph.neighbours(u).map(v => this.number(v) ?? 0))
+                const maxNeighbour = Math.max(...graph.neighbours(u).map(v => this.number(v)))
                 if (maxNeighbour < this.number(u)) {
                     this.types.set(u, 'leaf')
                 } else {
@@ -60,9 +68,36 @@ class NumberedGraph<T> {
             }
         })
         console.log(`V = ${JSON.stringify(graph.vertices)}`)
-        console.log(`I = ${JSON.stringify(Object.fromEntries(this.numbers))}`)
+        console.log(`i = ${JSON.stringify(Object.fromEntries(this.numbers))}`)
 
-        // Then, find the highest neighbours
+        const root = this.dfsOrder[0]
+        this.types.set(root, 'root')
+
+        // Then, label according to the highest neighbours
+        this.labels = labelVertices(this)
+        this.assertLabelOrdering()
+
+        const labelReverse = new Map<number, T[]>()
+        for (const u of this.vertices) {
+            const verticesWithLabel = labelReverse.get(this.label(u)) ?? []
+            verticesWithLabel.push(u)
+            labelReverse.set(this.label(u), verticesWithLabel)
+        }
+
+        for (const label of labelReverse) {
+
+        }
+    }
+
+    /**
+     * Since g is biconnected, we must have B(i) > i for every internal vertex.
+     */
+    private assertLabelOrdering () {
+        for (const u of this.vertices) {
+            if (this.types.get(u) === 'internal' && this.label(u) <= this.number(u)) {
+                throw new Error(`B(${u}) = ${this.label(u)} but expected > ${this.number(u)}`)
+            }
+        }
     }
 
     get vertices (): T[] {
@@ -92,9 +127,17 @@ class NumberedGraph<T> {
     number (u: T): number {
         const number = this.numbers.get(u)
         if (number === undefined) {
-            throw new Error(`index(${JSON.stringify(u)}) not found`)
+            throw new Error(`number(${JSON.stringify(u)}) not found`)
         }
         return number
+    }
+
+    private label (u: T): number {
+        const label = this.labels.get(u)
+        if (label === undefined) {
+            throw new Error(`label(${JSON.stringify(u)}) not found`)
+        }
+        return label
     }
 }
 

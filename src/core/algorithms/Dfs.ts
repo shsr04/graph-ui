@@ -31,7 +31,7 @@ export function dfs<T> (g: Graph<T>, f?: DfsFunctions<T>): Map<T, T | null> {
 
 export function visitDfs<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predecessor: Map<T, T | null>, f?: DfsFunctions<T>): void {
     const parent = predecessor.get(u) ?? null
-    f?.preprocess?.(u)
+    f?.preprocess?.(u, parent)
     colour.set(u, 'grey')
     for (let k = 0; k < g.neighbours(u).length; k++) {
         const v = g.adj(u, k)
