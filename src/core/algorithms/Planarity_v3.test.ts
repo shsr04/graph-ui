@@ -1,7 +1,7 @@
 import { checkPlanarity } from './Planarity_v3'
 import { GraphEditorDotImpl } from '../../adapters/GraphEditorDotImpl'
 
-describe(checkPlanarity.name, () => {
+describe('Planarity v3', () => {
     it('should classify planar graphs', () => {
         const g = new GraphEditorDotImpl().parseInput(`graph test {
             a -- b -- c -- d -- e -- a

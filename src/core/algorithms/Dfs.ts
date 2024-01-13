@@ -45,5 +45,5 @@ export function visitDfs<T> (g: Graph<T>, u: T, colour: Map<T, Colour>, predeces
         f?.postexplore?.(u, k, c, parent)
     }
     colour.set(u, 'black')
-    f?.postprocess?.(u, parent)
+    f?.postprocess?.(u)
 }
